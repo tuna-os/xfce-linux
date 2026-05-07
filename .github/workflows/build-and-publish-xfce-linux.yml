@@ -58,11 +58,16 @@ jobs:
             python3-venv \
             git \
             curl \
-            bubblewrap \
-            python3-dulwich \
-            python3-yaml
+            bubblewrap
           
-          pip3 install --user buildstream dulwich
+          # Install BuildStream and all required plugins/dependencies via pip
+          pip3 install --user --upgrade \
+            buildstream \
+            'dulwich>=0.20.0' \
+            pyyaml \
+            grpcio \
+            protobuf
+          
           ~/.local/bin/bst --version || bst --version
 
       - name: Install just
