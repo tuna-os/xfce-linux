@@ -58,9 +58,11 @@ jobs:
             python3-venv \
             git \
             curl \
-            bubblewrap
+            bubblewrap \
+            python3-dulwich \
+            python3-yaml
           
-          pip3 install --user buildstream
+          pip3 install --user buildstream dulwich
           ~/.local/bin/bst --version || bst --version
 
       - name: Install just
