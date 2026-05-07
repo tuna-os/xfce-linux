@@ -57,7 +57,8 @@ jobs:
             python3-pip \
             python3-venv \
             git \
-            curl
+            curl \
+            bubblewrap
           
           pip3 install --user buildstream
           ~/.local/bin/bst --version || bst --version
