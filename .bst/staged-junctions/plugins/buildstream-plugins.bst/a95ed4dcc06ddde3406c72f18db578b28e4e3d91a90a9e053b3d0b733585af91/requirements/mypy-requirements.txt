@@ -1,4 +1,0 @@
-# Additional requirements for running mypy
-
-# For docker plugin
-types-requests
