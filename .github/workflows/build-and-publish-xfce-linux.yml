@@ -45,30 +45,11 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Podman
+      - name: Set up Podman and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman buildah
+          sudo apt-get install -y podman buildah git curl
           podman --version
-
-      - name: Install BuildStream and dependencies
-        run: |
-          sudo apt-get install -y \
-            python3-pip \
-            python3-venv \
-            git \
-            curl \
-            bubblewrap
-          
-          # Install BuildStream and all required plugins/dependencies via pip
-          pip3 install --user --upgrade \
-            buildstream \
-            'dulwich>=0.20.0' \
-            pyyaml \
-            grpcio \
-            protobuf
-          
-          ~/.local/bin/bst --version || bst --version
 
       - name: Install just
         run: |
@@ -90,23 +71,12 @@ jobs:
             echo "image-tag=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build xfce-linux image with BuildStream
+      - name: Build and export xfce-linux image
         run: |
-          export PATH=$HOME/.local/bin:$PATH
           cd ${{ github.workspace }}
-          
-          echo "Building xfce-linux OCI image..."
-          bst build oci/xfce-linux.bst
-        timeout-minutes: 180
-
-      - name: Export OCI image
-        run: |
-          export PATH=$HOME/.local/bin:$PATH
-          cd ${{ github.workspace }}
-          
-          echo "Exporting image..."
-          just export
-        timeout-minutes: 60
+          echo "Building and exporting xfce-linux OCI image via just..."
+          just build
+        timeout-minutes: 300
 
       - name: Display image info
         run: |
