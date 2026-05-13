@@ -3,7 +3,7 @@ description: Create symlinks for xfce libraries in lib64
 
 depends:
   - xfce-linux/xfce-binaries.bst
-  - freedesktop-sdk.bst:core/bash.bst
+  - freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
 
 config:
   configure-commands:
@@ -23,6 +23,7 @@ config:
         ln -sf /usr/lib/${libname}.so.0 "%{install-root}/usr/lib64/${libname}.so.0" 2>/dev/null || true  
         ln -sf /usr/lib/${libname}.so.0.0.0 "%{install-root}/usr/lib64/${libname}.so.0.0.0" 2>/dev/null || true
       done
+
 
 
 
