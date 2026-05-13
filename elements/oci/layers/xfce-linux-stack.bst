@@ -22,10 +22,8 @@ public:
       - mkdir -p /var/home/james/dev/xfce-wayland
       - ln -s /usr /var/home/james/dev/xfce-wayland/install
       - ldconfig || true
-      # Fix missing libraries
-      - mkdir -p /usr/lib/x86_64-linux-gnu
-      - ln -s /usr/lib64/libxfce4kbd-private-3.so.0 /usr/lib/x86_64-linux-gnu/libxfce4kbd-private-3.so.0
-      - ln -s /usr/lib64/libxfconf-0.so.3 /usr/lib/x86_64-linux-gnu/libxfconf-0.so.3
+      # xfce libraries are already in /usr/lib/x86_64-linux-gnu for multilib compatibility
+      # so no additional symlinks needed
       # Disable GNOME services that interfere with XFCE
       - systemctl disable gnome-initial-setup || true
       - systemctl enable gdm || true
