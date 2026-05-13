@@ -17,6 +17,7 @@ depends:
   - freedesktop-sdk.bst:components/dummy-gbm.bst
   - freedesktop-sdk.bst:components/libdisplay-info.bst
   - freedesktop-sdk.bst:components/gtk.bst
+  - freedesktop-sdk.bst:components/patchelf.bst
   - xfce-linux/xfce-binaries.bst
 
 sources:
@@ -39,3 +40,6 @@ config:
     - |
       mkdir -p "%{install-root}/usr/bin"
       cp xfce-wayland/xfwl4/target/release/xfwl4 "%{install-root}/usr/bin/"
+      # Use patchelf to add /usr/lib to rpath so xfce libraries are found
+      patchelf --set-rpath "/usr/lib:/usr/lib/x86_64-linux-gnu:/lib64" "%{install-root}/usr/bin/xfwl4"
+
