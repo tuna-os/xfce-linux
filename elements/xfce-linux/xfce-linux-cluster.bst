@@ -10,9 +10,8 @@ description: |
   and all supporting applications and libraries.
 
 depends:
-  # The pre-built XFCE binaries themselves (now includes udev-enabled xfwl4)
-  # and lib64 symlinks for library path compatibility
-  - xfce-linux/xfce-binaries.bst
+  # The pre-built XFCE binaries wrapped with lib64 symlinks for proper dynamic loading
+  - xfce-linux/xfce-binaries-wrapped.bst
   # XFCE default settings
   - xfce-linux/dconf-config.bst
   # XFCE users and config
