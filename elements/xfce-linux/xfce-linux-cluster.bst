@@ -10,8 +10,8 @@ description: |
   and all supporting applications and libraries.
 
 depends:
-  # The pre-built XFCE binaries themselves (includes fixed startxfce4-wayland)
-  - xfce-linux/xfce-binaries.bst
+  # The pre-built XFCE binaries with multilib library path compatibility
+  - xfce-linux/xfce-lib-compat.bst
   # XFCE default settings
   - xfce-linux/dconf-config.bst
   # XFCE users and config
