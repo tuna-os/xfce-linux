@@ -21,7 +21,7 @@ sudo apt install buildstream podman qemu-system-x86
 git clone <repository> xfce-linux
 cd xfce-linux
 
-# Build OCI image
+# Build OCI image, export it, and chunkify it Dakota-style
 just build
 
 # Export image
@@ -81,9 +81,9 @@ xfce-linux/
 
 ```bash
 # Build phases
-just build              # Full OCI build
-just export             # Export to image
-just generate-bootable  # Create bootable disk
+just build              # Full OCI build, export, and chunkify
+just export             # Refresh the exported image
+just generate-bootable-image  # Create bootable disk
 just boot-vm            # Launch QEMU VM
 
 # Development
@@ -149,13 +149,13 @@ Boot Flow
 
 ## Known Issues & Solutions
 
-### 1. Bootc Multi-Layer OCI Incompatibility
-**Issue:** `bootc install` fails with "Multiple commit objects found"
+### 1. Bootc Composefs Install Path
+**Issue:** `bootc install` needs the exported image normalized before install
 
-**Root Cause:** BuildStream generates multi-layer OCI (platform + runtime + apps); bootc expects single ostree commit
+**Root Cause:** BuildStream generates layered OCI output; Dakota-style chunkifying keeps the bootc path compatible with composefs-backed installs
 
 **Solutions:**
-1. Layer squashing (see SOLUTIONS_AND_ANALYSIS.md)
+1. Dakota-style chunkify after export (wired into `just build`)
 2. Use OSTree import directly
 3. Use containers-storage approach
 

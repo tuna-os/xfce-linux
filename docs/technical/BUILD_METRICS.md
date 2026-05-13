@@ -90,8 +90,8 @@ Once container pulling is available:
 ```bash
 cd ~/dev/xfce-linux
 
-# Get OCI image into podman
-just export  # When network/container issues resolved
+# Get OCI image into podman, then chunkify it Dakota-style
+just build  # When network/container issues resolved
 
 # Create bootable disk image
 just generate-bootable-image
@@ -105,12 +105,12 @@ just boot-vm
 ### When Network/Container Access Restored
 
 1. **Export the OCI image**:
-   ```bash
-   cd ~/dev/xfce-linux
-   mkdir -p .build-out
-   # Use bst to checkout artifact (requires network for container)
-   podman pull oci:.build-out
-   ```
+    ```bash
+    cd ~/dev/xfce-linux
+    mkdir -p .build-out
+    # Use bst to checkout artifact (requires network for container)
+    just build
+    ```
 
 2. **Create bootable disk image** (30GB):
    ```bash
@@ -304,7 +304,7 @@ Once container/network issues are resolved:
 When network/container access is restored:
 ```bash
 cd ~/dev/xfce-linux
-just export && just generate-bootable-image && just boot-vm
+just build && just generate-bootable-image && just boot-vm
 ```
 
 ---

@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: libxfconf-0
+Description: Xfce configuration daemon library
+Version: 4.21.1
+Libs: -L${libdir} -lxfconf-0
+Cflags: -I${includedir}

@@ -119,14 +119,16 @@ The test image approach revealed that:
 
 ## ✨ Workarounds for Future Attempts
 
-### Option 1: Network/Registry Access
+### Option 1: Dakota-style export path
 
 **When available**: Simply run:
 ```bash
-just export                    # Export image
+just build                     # Export + chunkify image
 just generate-bootable-image   # Create bootable disk
 just boot-vm                   # Boot in QEMU
 ```
+
+The bootc install step already uses `--composefs-backend`, matching the Dakota flow.
 
 ### Option 2: Direct OSTree Deployment
 
@@ -193,7 +195,7 @@ Despite infrastructure blockers:
    cd ~/dev/xfce-linux
    just export
    ```
-   - This will export the successfully-built OCI image from cache
+   - This will export the successfully-built OCI image from cache and chunkify it
    - Load it into podman as `xfce-linux:latest`
 
 2. **Generate bootable image**:
@@ -201,7 +203,7 @@ Despite infrastructure blockers:
    just generate-bootable-image
    ```
    - Creates 30GB sparse bootable.raw
-   - Uses bootc to install to disk
+   - Uses bootc with `--composefs-backend` to install to disk
    - Takes 10-20 minutes
 
 3. **Boot in QEMU**:
@@ -270,7 +272,7 @@ If network still unavailable:
 **Next Developer Action**:
 When network access is restored, simply run:
 ```bash
-cd ~/dev/xfce-linux && just export && just generate-bootable-image && just boot-vm
+cd ~/dev/xfce-linux && just build && just generate-bootable-image && just boot-vm
 ```
 
 The hard part (building the OCI image) is DONE. Testing is just waiting for infrastructure.

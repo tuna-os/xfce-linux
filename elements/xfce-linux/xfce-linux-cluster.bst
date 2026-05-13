@@ -10,7 +10,18 @@ description: |
   and all supporting applications and libraries.
 
 depends:
+  # The pre-built XFCE binaries themselves (now includes udev-enabled xfwl4)
+  - xfce-linux/xfce-binaries.bst
+  # XFCE default settings
+  - xfce-linux/dconf-config.bst
+  # XFCE users and config
+  - xfce-linux/etc-config.bst
+
+
+
+
   # Core dependencies that everything needs
+
   - freedesktop-sdk.bst:public-stacks/runtime-minimal.bst
   - freedesktop-sdk.bst:components/gtk3.bst
   - gnome-build-meta.bst:sdk/gtk.bst

@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib/x86_64-linux-gnu
+includedir=${prefix}/include
+
+Name: libstartup-notification-1.0
+Description: Startup notification library
+Version: 0.12
+Libs: -L${libdir} -lstartup-notification-1
+Cflags: -I${includedir}

@@ -99,7 +99,7 @@ OCI Image: db9e454f
 | **Podman** | ✅ | Image building works |
 | **Serial Console** | ✅ | Interactive TTY |
 | **SSH** | ⏳ | Port forwarded, auth pending |
-| **Bootc** | ⚠️ | Multi-layer OCI issue (solvable) |
+| **Bootc** | ⚠️ | Composefs-backed install path (chunkified export) |
 
 ---
 
@@ -136,11 +136,11 @@ just boot-vm
 
 ## 📋 Known Issues
 
-### 1. Bootc Multi-Layer OCI Incompatibility
-- **Error:** "Multiple commit objects found"
-- **Cause:** BuildStream outputs multiple layers; bootc expects single commit
-- **Status:** Understood & documented
-- **Solutions:** Layer squashing, OSTree import, or containers-storage
+### 1. Bootc Composefs Install Path
+- **Error:** bootc install needs the exported image normalized before install
+- **Cause:** BuildStream outputs layered OCI; Dakota-style chunkifying keeps the bootc path compatible with composefs-backed installs
+- **Status:** Understood & wired into the build recipe
+- **Solutions:** Dakota-style chunkify after export, OSTree import, or containers-storage
 
 ### 2. Artifact Export Dependency Resolution
 - **Error:** "No artifacts to stage"

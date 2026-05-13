@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=org.freedesktop.thumbnails.Thumbnailer1
-Exec=/var/home/james/dev/xfce-wayland/install/lib64/tumbler-1/tumblerd
-SystemdService=tumblerd.service

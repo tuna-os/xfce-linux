@@ -1,10 +1,10 @@
 # XFCE Linux keybindings
 
-[/org/xfce/window-manager/]
+[org/xfce/window-manager]
 super_key_action='showdesktop'
 switch_window_key='<Super>Tab'
 switch_workspace_key='<Super><Alt>Up'
 move_window_key='<Super>h'
 
-[/org/xfce/panel/]
+[org/xfce/panel]
 show-desktop-key='F13'

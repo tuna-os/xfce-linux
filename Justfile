@@ -7,7 +7,7 @@ default:
 export image_name := env("BUILD_IMAGE_NAME", "xfce-linux")
 export image_tag := env("BUILD_IMAGE_TAG", "latest")
 export base_dir := env("BUILD_BASE_DIR", ".")
-export filesystem := env("BUILD_FILESYSTEM", "btrfs")
+export filesystem := env("BUILD_FILESYSTEM", "ext4")
 
 # Same bst2 container image CI uses -- pinned by SHA for reproducibility
 export bst2_image := env("BST2_IMAGE", "registry.gitlab.com/freedesktop-sdk/infrastructure/freedesktop-sdk-docker-images/bst2:latest")
@@ -32,7 +32,7 @@ bst *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p "${HOME}/.cache/buildstream"
-    # BST_FLAGS env var allows CI to inject --no-interactive, --config, etc.
+    # BST_FLAGS env var allows CI to inject --no-interactive, etc.
     # Word-splitting is intentional here (flags are space-separated).
     # shellcheck disable=SC2086
     podman run --rm \
@@ -64,7 +64,7 @@ log:
     tail -f /var/tmp/{{image_name}}-build.log
 
 # ── Build ─────────────────────────────────────────────────────────────
-# Build the OCI image and load it into podman.
+# Build the OCI image, load it into podman, and chunkify the result.
 [group('build')]
 build:
     #!/usr/bin/env bash
@@ -123,6 +123,9 @@ export:
     echo "==> Export complete. Image loaded as {{image_name}}:{{image_tag}}"
     $SUDO_CMD podman images | grep -E "{{image_name}}|REPOSITORY" || true
 
+    # Match Dakota's post-export flow so the boot image is chunkified before bootc.
+    just chunkify "{{image_name}}:{{image_tag}}"
+
 # ── Clean ─────────────────────────────────────────────────────────────
 # Remove generated artifacts (disk image, OVMF vars, build output).
 [group('build')]
@@ -165,7 +168,7 @@ generate-bootable-image $base_dir=base_dir $filesystem=filesystem:
     fi
 
     echo "==> Installing OS to disk image via bootc..."
-    just bootc install to-disk \
+    BUILD_IMAGE_NAME="{{image_name}}" just bootc install to-disk \
         --via-loopback /data/bootable.raw \
         --filesystem "${filesystem}" \
         --wipe \
@@ -259,15 +262,20 @@ boot-vm $base_dir=base_dir:
             -drive if=pflash,format=raw,readonly=on,file="${OVMF_CODE}" \
             -drive if=pflash,format=raw,file="${OVMF_VARS}" \
             -device virtio-vga \
-            -display gtk \
+            -display vnc=127.0.0.1:1 \
             -device virtio-keyboard \
             -device virtio-mouse \
             -device virtio-net-pci,netdev=net0 \
-            -netdev user,id=net0,hostfwd=tcp:127.0.0.1:2222-:22 \
-            -chardev stdio,id=char0,mux=on,signal=off \
-            -serial chardev:char0 \
-            -serial chardev:char0 \
-            -mon chardev=char0
+            -netdev user,id=net0,hostfwd=tcp:127.0.0.1:2223-:22 \
+            -serial telnet:127.0.0.1:4445,server,nowait \
+            -serial telnet:127.0.0.1:4447,server,nowait \
+            -monitor unix:./qemu-monitor.sock,server,nowait \
+            -daemonize -pidfile /tmp/xfce-linux-vm.pid
+
+
+
+
+
 
     else
         echo "==> qemu-system-x86_64 not found, falling back to docker.io/qemux/qemu-docker..."
@@ -306,6 +314,50 @@ boot-vm $base_dir=base_dir:
             --volume "${DISK}:${BOOT_MOUNT}" \
             ghcr.io/qemus/qemu:latest
     fi
+
+# ── Boot in libvirt ──────────────────────────────────────────────────
+[group('test')]
+boot-libvirt name="xfce-linux" ram="8192" cpus="4":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    DISK=$(realpath "{{base_dir}}/bootable.qcow2")
+    FORMAT="qcow2"
+    if [ ! -e "$DISK" ]; then
+        DISK=$(realpath "{{base_dir}}/bootable.raw")
+        FORMAT="raw"
+    fi
+
+    if [ ! -e "$DISK" ]; then
+        echo "Error: Disk image not found. Run 'just generate-bootable-image' first."
+        exit 1
+    fi
+
+    # Destroy and undefine existing VM if it exists
+    virsh --connect qemu:///session destroy "{{name}}" 2>/dev/null || true
+    virsh --connect qemu:///session undefine "{{name}}" --nvram 2>/dev/null || true
+
+    echo "==> Creating libvirt domain '{{name}}' (format: ${FORMAT})..."
+    virt-install \
+        --connect qemu:///session \
+        --name "{{name}}" \
+        --memory "{{ram}}" \
+        --vcpus "{{cpus}}" \
+        --disk path="${DISK}",format="${FORMAT}",bus=sata,cache=none \
+        --os-variant fedora-unknown \
+        --boot loader=/usr/share/edk2/ovmf/OVMF_CODE.fd,loader.readonly=yes,loader.type=pflash,nvram.template=/usr/share/edk2/ovmf/OVMF_VARS.fd,loader_secure=no \
+        --import \
+        --graphics vnc \
+        --video virtio \
+        --noautoconsole
+
+
+
+    echo "==> VM '{{name}}' created and started."
+    echo "==> You can connect to it using: virt-viewer -c qemu:///session {{name}}"
+    echo "==> or open Virtual Machine Manager (virt-manager)."
+
+
 
 # ── Convert to qcow2 ──────────────────────────────────────────────────
 [group('test')]

@@ -1,8 +1,0 @@
-prefix=/var/home/james/dev/xfce-wayland/install
-includedir=${prefix}/include
-
-Name: libxfce4windowing-x11-0
-Description: X11/Wayland windowing utility library for Xfce (X11 backend)
-Version: 4.20.5-dev
-Requires.private: libxfce4windowing-0
-Cflags: -I${includedir}

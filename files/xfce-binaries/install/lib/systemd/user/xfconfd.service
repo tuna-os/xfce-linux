@@ -1,7 +1,0 @@
-[Unit]
-Description=Xfce configuration service
-
-[Service]
-Type=dbus
-BusName=org.xfce.Xfconf
-ExecStart=/var/home/james/dev/xfce-wayland/install/lib64/xfce4/xfconf/xfconfd

@@ -37,6 +37,30 @@ config:
       systemd-sysusers --root /layer
 
     - |
+      # Remove password for xfce and root users for live-style access
+      if [ -f /layer/etc/shadow ]; then
+        sed -i "s|^xfce:[^:]*:|xfce::|" /layer/etc/shadow
+        sed -i "s|^root:[^:]*:|root::|" /layer/etc/shadow
+      fi
+
+    - |
+      # Skip GNOME Initial Setup for xfce user (use skeleton)
+      mkdir -p /layer/etc/skel/.config
+      touch /layer/etc/skel/.config/gnome-initial-setup-done
+
+    - |
+      # Configure Sudo for xfce user
+      mkdir -p /layer/etc/sudoers.d
+      echo "xfce ALL=(ALL) NOPASSWD: ALL" > /layer/etc/sudoers.d/xfce
+      chmod 440 /layer/etc/sudoers.d/xfce
+
+    - |
+      # Force use xfce-wayland as default
+      if [ -f /layer/etc/gdm/custom.conf ]; then
+        sed -i 's/DefaultSession=.*/DefaultSession=xfce-wayland/' /layer/etc/gdm/custom.conf
+      fi
+
+    - |
       glib-compile-schemas /layer/usr/share/glib-2.0/schemas
 
     # bootc images must not have both /etc and /usr/etc.

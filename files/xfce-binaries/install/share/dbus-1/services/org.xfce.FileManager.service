@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=org.xfce.FileManager
-Exec=/var/home/james/dev/xfce-wayland/install/bin/Thunar --gapplication-service
-SystemdService=thunar.service

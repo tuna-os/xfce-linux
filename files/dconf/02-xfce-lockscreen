@@ -1,5 +1,5 @@
 # XFCE Linux lock screen
 # xflock4 is the standard XFCE screen locker
 
-[/org/xfce/session/]
+[org/xfce/session]
 lock-screen-saver-cmd='xflock4'

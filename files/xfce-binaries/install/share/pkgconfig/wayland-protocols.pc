@@ -1,9 +1,0 @@
-
-prefix=/var/home/james/dev/xfce-wayland/install
-includedir=${prefix}/include
-datarootdir=${prefix}/share
-pkgdatadir=${pc_sysrootdir}${datarootdir}/wayland-protocols
-
-Name: Wayland Protocols
-Description: Wayland protocol files
-Version: 1.48

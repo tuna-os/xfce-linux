@@ -1,9 +1,9 @@
 # XFCE Linux default settings
 # Applied at build time into the dconf database
 
-[/org/xfce/desktop/screensaver/]
+[org/xfce/desktop/screensaver]
 lock-enabled=true
 lock-command='xflock4'
 
-[/org/xfce/session/]
+[org/xfce/session]
 save-on-exit=true

@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: libxfce4ui-2
+Description: Common UI library for Xfce
+Version: 4.20.0
+Libs: -L${libdir} -lxfce4ui-2
+Cflags: -I${includedir}

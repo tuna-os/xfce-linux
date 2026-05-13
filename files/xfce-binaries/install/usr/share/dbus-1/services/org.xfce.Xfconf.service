@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.xfce.Xfconf
+Exec=/usr/lib64/xfce4/xfconf/xfconfd
+SystemdService=xfconfd.service

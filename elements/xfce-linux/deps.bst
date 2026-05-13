@@ -31,3 +31,5 @@ depends:
   - freedesktop-sdk.bst:components/vmlinuxh.bst
   - gnome-build-meta.bst:gnomeos-deps/just.bst
   - gnome-build-meta.bst:gnomeos-deps/wl-clipboard.bst
+  - freedesktop-sdk.bst:components/libseat.bst
+  - freedesktop-sdk.bst:components/libdisplay-info.bst

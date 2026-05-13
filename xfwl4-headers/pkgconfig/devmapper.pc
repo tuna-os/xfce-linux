@@ -1,0 +1,12 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib/x86_64-linux-gnu
+includedir=/usr/include
+
+Name: devmapper
+Description: device-mapper library
+Version: 1.02.213
+Cflags: -I${includedir} 
+Libs: -L${libdir} -ldevmapper
+Requires.private: libselinux libudev
+Libs.private: -lm  -lpthread

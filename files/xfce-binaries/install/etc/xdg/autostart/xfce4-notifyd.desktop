@@ -43,6 +43,6 @@ Name[vi]=Dịch vụ thông báo Xfce
 Name[zh_CN]=Xfce 通知守护进程
 Name[zh_TW]=Xfce 通知常駐程式
 Name=Xfce Notification Daemon
-Exec=sh -c "systemctl --user start xfce4-notifyd.service 2>/dev/null || exec /var/home/james/dev/xfce-wayland/install/lib64/xfce4/notifyd/xfce4-notifyd"
+Exec=sh -c "systemctl --user start xfce4-notifyd.service 2>/dev/null || exec /usr/lib64/xfce4/notifyd/xfce4-notifyd"
 Icon=org.xfce.notification
 OnlyShowIn=XFCE;

@@ -1,0 +1,10 @@
+prefix=/usr
+includedir=${prefix}/include
+libdir=${prefix}/lib64
+
+Name: libxfce4windowingui-0
+Description: X11/Wayland windowing utility library for Xfce - extra widgets
+Version: 4.20.5-dev
+Requires.private: libxfce4windowing-0, gtk+-3.0 >=  3.24.10
+Libs: -L${libdir} -lxfce4windowingui-0
+Cflags: -I${includedir}/xfce4/libxfce4windowing-0

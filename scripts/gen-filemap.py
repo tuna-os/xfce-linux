@@ -40,16 +40,12 @@ def strip_ansi(s: str) -> str:
 
 PROJECT_ROOT = Path(__file__).parent.parent
 OUTPUT_PATH = PROJECT_ROOT / "files" / "filemap.json"
-DEFAULT_TARGET = "oci/layers/bluefin.bst"
+DEFAULT_TARGET = "oci/layers/xfce-linux.bst"
 
 # Heuristic update-cadence hints keyed on element-name substrings.
 # First match wins; elements not matching any hint get "monthly".
 INTERVAL_HINTS: list[tuple[str, str]] = [
-    ("bluefin/",            "weekly"),
-    ("gnome/gnome-shell",   "weekly"),
-    ("gnome/mutter",        "weekly"),
-    ("gnome/gdm",           "weekly"),
-    ("gnome/nautilus",      "weekly"),
+    ("xfce-linux/",         "weekly"),
     ("gnome/",              "monthly"),
     ("freedesktop-sdk",     "monthly"),
 ]

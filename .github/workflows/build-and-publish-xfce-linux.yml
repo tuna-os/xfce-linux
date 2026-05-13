@@ -71,10 +71,10 @@ jobs:
             echo "image-tag=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build and export xfce-linux image
+      - name: Build, chunkify, and export xfce-linux image
         run: |
           cd ${{ github.workspace }}
-          echo "Building and exporting xfce-linux OCI image via just..."
+          echo "Building, chunkifying, and exporting xfce-linux OCI image via just..."
           just build
         timeout-minutes: 300
 

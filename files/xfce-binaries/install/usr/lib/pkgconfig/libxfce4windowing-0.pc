@@ -1,0 +1,10 @@
+prefix=/usr
+includedir=${prefix}/include
+libdir=${prefix}/lib64
+
+Name: libxfce4windowing-0
+Description: X11/Wayland windowing utility library for Xfce
+Version: 4.20.5-dev
+Requires.private: gio-unix-2.0 >=  2.72.0, gtk+-3.0 >=  3.24.10, libdisplay-info >=  0.1.1, x11 >=  1.6.7, gdk-x11-3.0 >=  3.24.10, libwnck-3.0 >=  3.14, xrandr >=  1.5.0, gdk-wayland-3.0 >=  3.24.10, wayland-client >=  1.20
+Libs: -L${libdir} -lxfce4windowing-0
+Cflags: -I${includedir}/xfce4/libxfce4windowing-0

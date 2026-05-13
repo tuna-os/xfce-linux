@@ -1,0 +1,10 @@
+prefix=/usr
+includedir=${prefix}/include
+libdir=${prefix}/lib64
+
+Name: libxfce4util-1.0
+Description: Utility library for the Xfce 4 desktop environment
+Version: 4.20.1
+Requires.private: glib-2.0 >=  2.72.0, gobject-2.0 >=  2.72.0, gio-2.0 >=  2.72.0
+Libs: -L${libdir} -lxfce4util
+Cflags: -I${includedir}/xfce4

@@ -1,0 +1,10 @@
+prefix=/usr
+includedir=${prefix}/include
+libdir=${prefix}/lib64
+
+Name: libxfce4kbd-private
+Description: Private Xfce library for shared code between xfwm4 and xfce4-settings
+Version: 4.21.7-dev
+Requires.private: libxfce4ui-2, glib-2.0 >=  2.72.0, gtk+-3.0 >=  3.24.0, libxfce4util-1.0 >=  4.17.2, libxfconf-0 >=  4.12.0, gdk-x11-3.0 >=  3.24.0, x11 >=  1.6.7, sm >=  1.2.3, ice >=  1.0.10, libstartup-notification-1.0 >=  0.4
+Libs: -L${libdir} -lxfce4kbd-private-3
+Cflags: -I${includedir}/xfce4/libxfce4kbd-private-3

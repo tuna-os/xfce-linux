@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: libxfce4kbd-private-3
+Description: Xfce keyboard library
+Version: 4.21.4
+Libs: -L${libdir} -lxfce4kbd-private-3
+Cflags: -I${includedir}

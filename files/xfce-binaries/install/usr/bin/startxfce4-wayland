@@ -1,0 +1,25 @@
+#!/bin/sh
+# XFCE Wayland startup script
+# Optimized for xfwl4 compositor
+
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=XFCE
+export GDK_BACKEND=wayland
+export QT_QPA_PLATFORM=wayland
+export CLUTTER_BACKEND=wayland
+export MOZ_ENABLE_WAYLAND=1
+
+# Hardware rendering fixes for VM
+export WLR_RENDERER=pixman
+export SMITHAY_BACKEND=udev
+export WLR_NO_HARDWARE_CURSORS=1
+
+# Library path
+export LD_LIBRARY_PATH="/usr/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+
+# XDG Config/Data paths
+export XDG_CONFIG_DIRS="/etc/xdg:/usr/share/xfce4:/usr/local/share:/usr/share"
+export XDG_DATA_DIRS="/usr/share/xfce4:/usr/local/share:/usr/share"
+
+# Launch xfwl4 with xfce4-session
+exec xfwl4 --backend tty
