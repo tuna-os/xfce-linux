@@ -4,4 +4,4 @@ Description=XFCE notifications service
 [Service]
 Type=dbus
 BusName=org.freedesktop.Notifications
-ExecStart=/usr/lib64/xfce4/notifyd/xfce4-notifyd
+ExecStart=/usr/lib/xfce4/notifyd/xfce4-notifyd

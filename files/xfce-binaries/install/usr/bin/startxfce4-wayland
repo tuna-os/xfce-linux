@@ -11,8 +11,12 @@ export MOZ_ENABLE_WAYLAND=1
 # Full Rust backtraces on crash
 export RUST_BACKTRACE=1
 
-# Uncomment to force Mesa software renderer (llvmpipe) if hardware GL is unavailable
-# export LIBGL_ALWAYS_SOFTWARE=1
+# Force Mesa software renderer (llvmpipe) - required in QEMU without virgl
+export LIBGL_ALWAYS_SOFTWARE=1
+export GALLIUM_DRIVER=llvmpipe
+
+# Ensure XFCE libs in /usr/lib are found (ldconfig doesn't cache this dir on freedesktop-sdk)
+export LD_LIBRARY_PATH=/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
 # XDG Config/Data paths
 export XDG_CONFIG_DIRS="/etc/xdg:/usr/share/xfce4:/usr/local/share:/usr/share"

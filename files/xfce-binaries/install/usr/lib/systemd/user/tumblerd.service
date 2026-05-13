@@ -6,4 +6,4 @@ Type=dbus
 # This is deliberately the bus name that is the last one to be claimed;
 # if this is claimed, then everything is ready
 BusName=org.freedesktop.thumbnails.Thumbnailer1
-ExecStart=/usr/lib64/tumbler-1/tumblerd
+ExecStart=/usr/lib/tumbler-1/tumblerd

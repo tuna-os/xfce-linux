@@ -16,7 +16,6 @@ depends:
   - freedesktop-sdk.bst:components/pkg-config.bst
   - freedesktop-sdk.bst:components/dummy-gbm.bst
   - freedesktop-sdk.bst:components/libdisplay-info.bst
-  - freedesktop-sdk.bst:components/gtk.bst
   - xfce-linux/xfce-binaries.bst
 
 sources:
