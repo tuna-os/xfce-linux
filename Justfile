@@ -261,8 +261,9 @@ boot-vm $base_dir=base_dir:
             -drive file="${DISK}",format=raw,if=virtio \
             -drive if=pflash,format=raw,readonly=on,file="${OVMF_CODE}" \
             -drive if=pflash,format=raw,file="${OVMF_VARS}" \
-            -device virtio-vga \
-            -display vnc=127.0.0.1:1 \
+            -device virtio-vga-gl \
+            -display egl-headless,rendernode=/dev/dri/renderD128 \
+            -vnc 127.0.0.1:1 \
             -device virtio-keyboard \
             -device virtio-mouse \
             -device virtio-net-pci,netdev=net0 \

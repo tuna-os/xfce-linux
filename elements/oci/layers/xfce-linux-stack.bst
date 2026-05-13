@@ -21,9 +21,8 @@ public:
       # HACK: Fix hardcoded paths in pre-built binaries
       - mkdir -p /var/home/james/dev/xfce-wayland
       - ln -s /usr /var/home/james/dev/xfce-wayland/install
+      # Run ldconfig so /etc/ld.so.conf.d/xfce.conf (adding /usr/lib) takes effect
       - ldconfig || true
-      # xfce libraries are already in /usr/lib/x86_64-linux-gnu for multilib compatibility
-      # so no additional symlinks needed
       # Disable GNOME services that interfere with XFCE
       - systemctl disable gnome-initial-setup || true
       - systemctl enable gdm || true

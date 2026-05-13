@@ -1,6 +1,5 @@
 #!/bin/sh
 # XFCE Wayland startup script
-# Optimized for xfwl4 compositor
 
 export XDG_SESSION_TYPE=wayland
 export XDG_CURRENT_DESKTOP=XFCE
@@ -9,17 +8,15 @@ export QT_QPA_PLATFORM=wayland
 export CLUTTER_BACKEND=wayland
 export MOZ_ENABLE_WAYLAND=1
 
-# Hardware rendering fixes for VM
-export WLR_RENDERER=pixman
-export SMITHAY_BACKEND=udev
-export WLR_NO_HARDWARE_CURSORS=1
+# Full Rust backtraces on crash
+export RUST_BACKTRACE=1
 
-# Library path - prioritize /usr/lib where xfce libraries are installed
-export LD_LIBRARY_PATH="/usr/lib:/usr/lib64:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+# Uncomment to force Mesa software renderer (llvmpipe) if hardware GL is unavailable
+# export LIBGL_ALWAYS_SOFTWARE=1
 
 # XDG Config/Data paths
 export XDG_CONFIG_DIRS="/etc/xdg:/usr/share/xfce4:/usr/local/share:/usr/share"
 export XDG_DATA_DIRS="/usr/share/xfce4:/usr/local/share:/usr/share"
 
-# Launch xfwl4 with xfce4-session
+# Launch xfwl4 compositor (starts xfce4-session automatically)
 exec xfwl4 --backend tty
