@@ -10,8 +10,8 @@ description: |
   and all supporting applications and libraries.
 
 depends:
-  # The pre-built XFCE binaries with multilib library path compatibility
-  - xfce-linux/xfce-lib-compat.bst
+  # The pre-built XFCE binaries (includes libs in x86_64-linux-gnu for multilib compatibility)
+  - xfce-linux/xfce-binaries.bst
   # XFCE default settings
   - xfce-linux/dconf-config.bst
   # XFCE users and config
