@@ -3,13 +3,14 @@ description: Create symlinks for xfce libraries in lib64
 
 depends:
   - xfce-linux/xfce-binaries.bst
+  - freedesktop-sdk.bst:core/bash.bst
 
 config:
   configure-commands:
-    - "echo 'No configure needed'"
+    - "true"
   
   build-commands:
-    - "echo 'No build needed'"
+    - "true"
   
   install-commands:
     - |
@@ -22,6 +23,7 @@ config:
         ln -sf /usr/lib/${libname}.so.0 "%{install-root}/usr/lib64/${libname}.so.0" 2>/dev/null || true  
         ln -sf /usr/lib/${libname}.so.0.0.0 "%{install-root}/usr/lib64/${libname}.so.0.0.0" 2>/dev/null || true
       done
+
 
 
 
