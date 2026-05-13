@@ -30,13 +30,10 @@ config:
   build-commands:
     - |
       cd xfce-wayland/xfwl4
-      
-      # Use the staged headers and libraries from xfce-binaries
       export PKG_CONFIG_PATH="/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
-      export LIBRARY_PATH="/usr/lib64:/usr/lib"
-      
-      # Build without GTK component first to check for linking issues
-      cargo build --release --no-default-features --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl 2>&1 | grep -i "error\|warning" || echo "Build completed"
+      # Build with position-independent code to fix relocation issues
+      export RUSTFLAGS="-C relocation-model=pic"
+      cargo build --release --no-default-features --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
 
   install-commands:
     - |
