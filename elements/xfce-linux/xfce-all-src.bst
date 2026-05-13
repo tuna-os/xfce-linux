@@ -28,8 +28,10 @@ depends:
   - freedesktop-sdk.bst:components/libdisplay-info.bst
 
 sources:
-- kind: local
-  path: xfce-wayland-src
+- kind: git_repo
+  url: https://github.com/hanthor/xfce-wayland.git
+  track: main
+  ref: ef6789065952620b9d1e638fcd606b9bf14e5cf9
   directory: xfce-wayland
 
 config:
