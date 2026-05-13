@@ -16,13 +16,14 @@ depends:
   - freedesktop-sdk.bst:components/pkg-config.bst
   - freedesktop-sdk.bst:components/dummy-gbm.bst
   - freedesktop-sdk.bst:components/libdisplay-info.bst
+  - freedesktop-sdk.bst:components/gtk.bst
   - xfce-linux/xfce-binaries.bst
 
 sources:
 - kind: git_repo
   url: https://github.com/hanthor/xfce-wayland.git
   track: main
-  ref: 0155e26bdd91ef43d5d42954a2967233fda8f942
+  ref: ef6789065952620b9d1e638fcd606b9bf14e5cf9
   directory: xfce-wayland
 
 config:
@@ -34,9 +35,7 @@ config:
       export PKG_CONFIG_PATH="/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
       export LIBRARY_PATH="/usr/lib64:/usr/lib"
       
-      # Fix Rust linking issues
-      export RUSTFLAGS="-L /usr/lib64 -L /usr/lib -C link-arg=-Wl,-rpath-link,/usr/lib64"
-      
+      # Standard Rust build with system libraries
       cargo build --release --no-default-features --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
 
   install-commands:
