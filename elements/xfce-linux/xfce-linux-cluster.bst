@@ -10,8 +10,8 @@ description: |
   and all supporting applications and libraries.
 
 depends:
-  # The pre-built XFCE binaries wrapped with lib64 symlinks for proper dynamic loading
-  - xfce-linux/xfce-binaries-wrapped.bst
+  # The pre-built XFCE binaries themselves (includes fixed startxfce4-wayland)
+  - xfce-linux/xfce-binaries.bst
   # XFCE default settings
   - xfce-linux/dconf-config.bst
   # XFCE users and config

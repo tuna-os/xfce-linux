@@ -14,8 +14,8 @@ export WLR_RENDERER=pixman
 export SMITHAY_BACKEND=udev
 export WLR_NO_HARDWARE_CURSORS=1
 
-# Library path
-export LD_LIBRARY_PATH="/usr/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+# Library path - prioritize /usr/lib where xfce libraries are installed
+export LD_LIBRARY_PATH="/usr/lib:/usr/lib64:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 
 # XDG Config/Data paths
 export XDG_CONFIG_DIRS="/etc/xdg:/usr/share/xfce4:/usr/local/share:/usr/share"
