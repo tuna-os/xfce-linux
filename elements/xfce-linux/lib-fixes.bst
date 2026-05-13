@@ -1,29 +1,23 @@
-kind: manual
-description: Fix library path issues for xfce-binaries
+kind: script
+description: Copy xfce libraries to lib64 for dynamic linker compatibility
 
 depends:
-  - xfce-linux/xfce-binaries.bst
+  - freedesktop-sdk.bst:public-stacks/runtime-minimal.bst
 
 config:
+  build-commands: []
   install-commands:
     - |
-      # Copy xfce libraries from /usr/lib to /usr/lib64 for proper loading
+      # Copy xfce4 libraries to both lib and lib64
+      # This ensures they're found by the dynamic linker on 64-bit systems
       mkdir -p "%{install-root}/usr/lib64"
       
-      # Copy xfce4-specific libraries that are missing from standard paths
-      for lib in libxfce4kbd-private libxfce4util libxfce4ui libxfconf; do
-        if [ -d "%{install-root}/usr/lib" ]; then
-          find "%{install-root}/usr/lib" -name "${lib}*" -type f -o -name "${lib}*" -type l | while read f; do
-            if [ -f "$f" ] || [ -L "$f" ]; then
-              # Preserve relative paths
-              rel_path="${f#%{install-root}/usr/lib/}"
-              target_dir="%{install-root}/usr/lib64/$(dirname "$rel_path")"
-              mkdir -p "$target_dir"
-              cp -P "$f" "$target_dir/"
-            fi
-          done
-        fi
+      # Create symlinks for xfce libraries in lib64
+      for libname in libxfce4kbd-private-3 libxfce4util libxfce4ui-2 libxfconf-0; do
+        # Point to /usr/lib versions
+        ln -sf /usr/lib/${libname}.so "%{install-root}/usr/lib64/${libname}.so" 2>/dev/null || true
+        ln -sf /usr/lib/${libname}.so.0 "%{install-root}/usr/lib64/${libname}.so.0" 2>/dev/null || true
+        ln -sf /usr/lib/${libname}.so.0.0.0 "%{install-root}/usr/lib64/${libname}.so.0.0.0" 2>/dev/null || true
       done
-      
-      # Ensure /usr/lib64 exists and is in the binary's search path
-      mkdir -p "%{install-root}/usr/lib64"
+
+
