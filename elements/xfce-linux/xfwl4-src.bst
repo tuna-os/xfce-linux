@@ -31,6 +31,7 @@ sources:
 - kind: git_repo
   url: https://gitlab.xfce.org/kelnos/xfce-wayland-protocols.git
   ref: 4299072022d5fc9be0505f293cbe0f7f5ab6da00
+  directory: xfwl4/resources/xfce-wayland-protocols
 
 config:
   build-commands:
