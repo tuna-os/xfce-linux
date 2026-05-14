@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Collect diagnostic logs from a running xfce-linux VM via serial console."""
+import pexpect
+import re
+import sys
+import time
+
+VM = sys.argv[1] if len(sys.argv) > 1 else "xfce-linux"
+LIBVIRT_URI = "qemu:///system"
+
+def strip_ansi(text):
+    return re.sub(r"\x1b\[[0-9;]*[mGKHJ]|\x1b\].*?(?:\x07|\x1b\\)|\r", "", text)
+
+print(f"==> Connecting to VM '{VM}' via serial console...", flush=True)
+child = pexpect.spawn(
+    f"sudo virsh -c {LIBVIRT_URI} console {VM} --safe",
+    encoding="utf-8",
+    timeout=30,
+)
+
+child.expect("Escape character")
+child.sendline("")
+idx = child.expect(["login:", r"#\s*$", r"\$\s*$"], timeout=20)
+if idx == 0:
+    child.sendline("root")
+    child.expect(r"#\s*$", timeout=10)
+
+print("==> Connected. Collecting logs...\n", flush=True)
+
+CMDS = [
+    # xfwl4 crash path
+    ('xfwl4 errors',
+     'journalctl -b --no-pager 2>&1 | grep -Ev "TRACE|xfconf_backend_perchannel" '
+     '| grep -E "xfwl4|xfce4-session|xfce4-panel|xfdesktop|ERROR|PANIC|panic" | tail -60'),
+    # GDM session exit
+    ('GDM session',
+     'journalctl -u gdm -b --no-pager 2>&1 '
+     '| grep -E "session.*exit|Failed|Error|error" | tail -20'),
+    # Network / SSH
+    ('network + sshd',
+     'ip addr show | grep "inet "; systemctl is-active sshd; hostname -I 2>/dev/null || true'),
+    # Last 30 lines of journal
+    ('recent journal',
+     'journalctl -b --no-pager -n 30 2>&1 | grep -Ev "TRACE|xfconf_backend_perchannel"'),
+]
+
+for title, cmd in CMDS:
+    child.sendline(cmd)
+    child.expect(r"#\s*$", timeout=30)
+    output = strip_ansi(child.before).strip()
+    # Remove the echoed command line
+    lines = output.splitlines()
+    if lines and cmd[:40] in lines[0]:
+        lines = lines[1:]
+    output = "\n".join(lines).strip()
+    if output:
+        print(f"── {title} {'─' * (60 - len(title))}")
+        print(output)
+        print()
+
+child.sendcontrol("]")
+time.sleep(0.3)
+child.close(force=True)

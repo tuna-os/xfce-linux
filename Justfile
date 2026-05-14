@@ -335,53 +335,66 @@ boot-libvirt name="xfce-linux" ram="8192" cpus="4":
     fi
 
     # Destroy and undefine existing VM if it exists
-    virsh --connect qemu:///session destroy "{{name}}" 2>/dev/null || true
-    virsh --connect qemu:///session undefine "{{name}}" --nvram 2>/dev/null || true
+    sudo virsh destroy "{{name}}" 2>/dev/null || true
+    sudo virsh undefine "{{name}}" --nvram 2>/dev/null || true
 
-    NVRAM_DST="${HOME}/.config/libvirt/qemu/nvram/{{name}}_VARS.fd"
-    mkdir -p "${HOME}/.config/libvirt/qemu/nvram"
-    cp /usr/share/edk2/ovmf/OVMF_VARS.fd "${NVRAM_DST}"
+    NVRAM_DST="/var/lib/libvirt/qemu/nvram/{{name}}_VARS.fd"
+    sudo cp /usr/share/edk2/ovmf/OVMF_VARS.fd "${NVRAM_DST}"
 
     echo "==> Creating libvirt domain '{{name}}' (format: ${FORMAT})..."
+    TMPL="{{justfile_directory()}}/files/vm/domain-template.xml"
     XML=$(mktemp --suffix=.xml)
-    cat > "${XML}" << XMLEOF
-<domain type='kvm'>
-  <name>{{name}}</name>
-  <memory unit='MiB'>{{ram}}</memory>
-  <vcpu>{{cpus}}</vcpu>
-  <os firmware='efi'>
-    <type arch='x86_64' machine='q35'>hvm</type>
-    <loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>
-    <nvram>${NVRAM_DST}</nvram>
-    <boot dev='hd'/>
-  </os>
-  <features><acpi/><apic/></features>
-  <cpu mode='host-passthrough'/>
-  <devices>
-    <emulator>/usr/libexec/qemu-kvm</emulator>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='${FORMAT}' cache='none'/>
-      <source file='${DISK}'/>
-      <target dev='sda' bus='sata'/>
-    </disk>
-    <graphics type='vnc' port='-1' listen='127.0.0.1'/>
-    <video><model type='virtio'/></video>
-    <input type='keyboard' bus='virtio'/>
-    <input type='mouse' bus='virtio'/>
-    <rng model='virtio'><backend model='random'>/dev/urandom</backend></rng>
-  </devices>
-</domain>
-XMLEOF
-    virsh --connect qemu:///session define "${XML}"
+    sed \
+        -e "s|VM_NAME|{{name}}|g" \
+        -e "s|VM_RAM|{{ram}}|g" \
+        -e "s|VM_CPUS|{{cpus}}|g" \
+        -e "s|VM_FORMAT|${FORMAT}|g" \
+        -e "s|VM_DISK|${DISK}|g" \
+        -e "s|NVRAM_DST|${NVRAM_DST}|g" \
+        "${TMPL}" > "${XML}"
+    sudo virsh define "${XML}"
     rm -f "${XML}"
-    virsh --connect qemu:///session start "{{name}}"
+    sudo virsh start "{{name}}"
 
-    echo "==> VM '{{name}}' started."
-    echo "==> Connect with: virt-viewer -c qemu:///session {{name}}"
+    echo "==> VM '{{name}}' started (qemu:///system)."
+    echo "==> Connect with: virt-viewer {{name}}"
     echo "==> or open Virtual Machine Manager (virt-manager)."
-    echo "==> VNC: $(virsh --connect qemu:///session vncdisplay {{name}} 2>/dev/null || echo 'check virt-manager')"
+    echo "==> VNC: $(sudo virsh vncdisplay {{name}} 2>/dev/null || echo 'check virt-manager')"
 
+# ── Get VM IP address ─────────────────────────────────────────────────
+[group('test')]
+vm-ip name="xfce-linux":
+    sudo virsh -c qemu:///system domifaddr "{{name}}" \
+        | awk '/ipv4/{gsub(/\/[0-9]+/,"",$4); print $4; exit}'
 
+# ── SSH into the VM ───────────────────────────────────────────────────
+[group('test')]
+ssh name="xfce-linux":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IP=$(just vm-ip "{{name}}")
+    if [ -z "$IP" ]; then
+        echo "ERROR: could not get IP for '{{name}}'. Is the VM running?" >&2
+        exit 1
+    fi
+    echo "==> SSH to root@${IP}"
+    ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 "root@${IP}"
+
+# ── Collect crash logs from VM console ───────────────────────────────
+[group('test')]
+logs name="xfce-linux":
+    /home/linuxbrew/.linuxbrew/bin/python3 {{justfile_directory()}}/scripts/vm-logs "{{name}}"
+
+# ── Boot VM and collect logs in one shot ─────────────────────────────
+[group('test')]
+test name="xfce-linux":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Starting VM '{{name}}'..."
+    sudo virsh -c qemu:///system start "{{name}}" 2>/dev/null || true
+    echo "==> Waiting 45s for boot..."
+    sleep 45
+    just logs "{{name}}"
 
 # ── Convert to qcow2 ──────────────────────────────────────────────────
 [group('test')]

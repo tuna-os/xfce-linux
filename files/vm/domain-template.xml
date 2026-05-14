@@ -1,0 +1,32 @@
+<domain type='kvm'>
+  <name>VM_NAME</name>
+  <memory unit='MiB'>VM_RAM</memory>
+  <vcpu>VM_CPUS</vcpu>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>
+    <nvram>NVRAM_DST</nvram>
+    <boot dev='hd'/>
+  </os>
+  <features><acpi/><apic/></features>
+  <cpu mode='host-passthrough'/>
+  <devices>
+    <emulator>/usr/libexec/qemu-kvm</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='VM_FORMAT' cache='none'/>
+      <source file='VM_DISK'/>
+      <target dev='sda' bus='sata'/>
+    </disk>
+    <interface type='network'>
+      <source network='default'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'><target type='isa-serial' port='0'/></serial>
+    <console type='pty'><target type='serial' port='0'/></console>
+    <graphics type='vnc' port='-1' listen='127.0.0.1'/>
+    <video><model type='virtio'/></video>
+    <input type='keyboard' bus='virtio'/>
+    <input type='mouse' bus='virtio'/>
+    <rng model='virtio'><backend model='random'>/dev/urandom</backend></rng>
+  </devices>
+</domain>
