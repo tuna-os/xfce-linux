@@ -26,7 +26,7 @@ sources:
 - kind: git_repo
   url: https://github.com/hanthor/xfwl4.git
   track: main
-  ref: bbb9f62146a72d245f1e29382852debf113abae0
+  ref: 965bbeef5c9d993056cbc2f81a4b6294b571f8f8
   directory: xfwl4
 - kind: git_repo
   url: https://gitlab.xfce.org/kelnos/xfce-wayland-protocols.git
