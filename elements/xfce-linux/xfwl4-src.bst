@@ -11,9 +11,13 @@ depends:
   - freedesktop-sdk.bst:components/pixman.bst
   - freedesktop-sdk.bst:components/wayland.bst
   - freedesktop-sdk.bst:components/wayland-protocols.bst
+  - freedesktop-sdk.bst:components/gtk3.bst
+  - freedesktop-sdk.bst:components/gdk-pixbuf.bst
+  - freedesktop-sdk.bst:components/xorg-lib-sm.bst
+  - gnome-build-meta.bst:core-deps/startup-notification.bst
+  - freedesktop-sdk.bst:public-stacks/buildsystem-meson.bst
   - freedesktop-sdk.bst:components/rust.bst
-  - freedesktop-sdk.bst:components/git.bst
-  - freedesktop-sdk.bst:components/pkg-config.bst
+  - freedesktop-sdk.bst:components/gettext.bst
   - freedesktop-sdk.bst:components/dummy-gbm.bst
   - freedesktop-sdk.bst:components/libdisplay-info.bst
   - xfce-linux/xfce-binaries.bst
@@ -22,17 +26,21 @@ sources:
 - kind: git_repo
   url: https://github.com/hanthor/xfwl4.git
   track: main
-  ref: 0a3a9d2f97d02d4e64a53d468d3cb2f500caf1f5
+  ref: afdd4ea5a3c9e86677aeb90367484c05adae029a
   directory: xfwl4
+- kind: git_repo
+  url: https://gitlab.xfce.org/kelnos/xfce-wayland-protocols.git
+  ref: 4299072022d5fc9be0505f293cbe0f7f5ab6da00
+  directory: xfwl4/resources/xfce-wayland-protocols
 
 config:
   build-commands:
     - |
       cd xfwl4
       export PKG_CONFIG_PATH="/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
-      # Build with position-independent code to fix relocation issues
       export RUSTFLAGS="-C relocation-model=pic"
-      cargo build --release --no-default-features --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
+      export GETTEXT_SYSTEM=1
+      cargo build --release --offline --frozen --no-default-features --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
 
   install-commands:
     - |
