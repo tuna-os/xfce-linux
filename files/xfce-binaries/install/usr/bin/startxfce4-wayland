@@ -11,6 +11,10 @@ export MOZ_ENABLE_WAYLAND=1
 # Full Rust backtraces on crash
 export RUST_BACKTRACE=1
 
+# Use Mesa software renderer (llvmpipe) — no host GPU needed in VM
+# Remove this line to use hardware GPU on real hardware
+export LIBGL_ALWAYS_SOFTWARE=1
+
 # Ensure XFCE libs in /usr/lib are found (ldconfig doesn't cache this dir on freedesktop-sdk)
 export LD_LIBRARY_PATH=/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
