@@ -30,8 +30,7 @@ sources:
   directory: xfwl4
 - kind: git_repo
   url: https://gitlab.xfce.org/kelnos/xfce-wayland-protocols.git
-  ref: bbb9f62146a72d245f1e29382852debf113abae0
-  directory: xfwl4/resources/xfce-wayland-protocols
+  ref: 4299072022d5fc9be0505f293cbe0f7f5ab6da00
 
 config:
   build-commands:
