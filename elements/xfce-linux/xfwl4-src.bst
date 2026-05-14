@@ -26,11 +26,11 @@ sources:
 - kind: git_repo
   url: https://github.com/hanthor/xfwl4.git
   track: main
-  ref: 56ef6a2c6664b04353e4bf7976b29b3516b28cc7
+  ref: bbb9f62146a72d245f1e29382852debf113abae0
   directory: xfwl4
 - kind: git_repo
   url: https://gitlab.xfce.org/kelnos/xfce-wayland-protocols.git
-  ref: 4299072022d5fc9be0505f293cbe0f7f5ab6da00
+  ref: bbb9f62146a72d245f1e29382852debf113abae0
   directory: xfwl4/resources/xfce-wayland-protocols
 
 config:
