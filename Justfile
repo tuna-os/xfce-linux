@@ -338,25 +338,48 @@ boot-libvirt name="xfce-linux" ram="8192" cpus="4":
     virsh --connect qemu:///session destroy "{{name}}" 2>/dev/null || true
     virsh --connect qemu:///session undefine "{{name}}" --nvram 2>/dev/null || true
 
+    NVRAM_DST="${HOME}/.config/libvirt/qemu/nvram/{{name}}_VARS.fd"
+    mkdir -p "${HOME}/.config/libvirt/qemu/nvram"
+    cp /usr/share/edk2/ovmf/OVMF_VARS.fd "${NVRAM_DST}"
+
     echo "==> Creating libvirt domain '{{name}}' (format: ${FORMAT})..."
-    virt-install \
-        --connect qemu:///session \
-        --name "{{name}}" \
-        --memory "{{ram}}" \
-        --vcpus "{{cpus}}" \
-        --disk path="${DISK}",format="${FORMAT}",bus=sata,cache=none \
-        --os-variant fedora-unknown \
-        --boot loader=/usr/share/edk2/ovmf/OVMF_CODE.fd,loader.readonly=yes,loader.type=pflash,nvram.template=/usr/share/edk2/ovmf/OVMF_VARS.fd,loader_secure=no \
-        --import \
-        --graphics vnc \
-        --video virtio \
-        --noautoconsole
+    XML=$(mktemp --suffix=.xml)
+    cat > "${XML}" << XMLEOF
+<domain type='kvm'>
+  <name>{{name}}</name>
+  <memory unit='MiB'>{{ram}}</memory>
+  <vcpu>{{cpus}}</vcpu>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>
+    <nvram>${NVRAM_DST}</nvram>
+    <boot dev='hd'/>
+  </os>
+  <features><acpi/><apic/></features>
+  <cpu mode='host-passthrough'/>
+  <devices>
+    <emulator>/usr/libexec/qemu-kvm</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='${FORMAT}' cache='none'/>
+      <source file='${DISK}'/>
+      <target dev='sda' bus='sata'/>
+    </disk>
+    <graphics type='vnc' port='-1' listen='127.0.0.1'/>
+    <video><model type='virtio'/></video>
+    <input type='keyboard' bus='virtio'/>
+    <input type='mouse' bus='virtio'/>
+    <rng model='virtio'><backend model='random'>/dev/urandom</backend></rng>
+  </devices>
+</domain>
+XMLEOF
+    virsh --connect qemu:///session define "${XML}"
+    rm -f "${XML}"
+    virsh --connect qemu:///session start "{{name}}"
 
-
-
-    echo "==> VM '{{name}}' created and started."
-    echo "==> You can connect to it using: virt-viewer -c qemu:///session {{name}}"
+    echo "==> VM '{{name}}' started."
+    echo "==> Connect with: virt-viewer -c qemu:///session {{name}}"
     echo "==> or open Virtual Machine Manager (virt-manager)."
+    echo "==> VNC: $(virsh --connect qemu:///session vncdisplay {{name}} 2>/dev/null || echo 'check virt-manager')"
 
 
 
