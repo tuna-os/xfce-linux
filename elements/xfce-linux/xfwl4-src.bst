@@ -20,15 +20,15 @@ depends:
 
 sources:
 - kind: git_repo
-  url: https://github.com/hanthor/xfce-wayland.git
+  url: https://github.com/hanthor/xfwl4.git
   track: main
-  ref: ef6789065952620b9d1e638fcd606b9bf14e5cf9
-  directory: xfce-wayland
+  ref: 0a3a9d2f97d02d4e64a53d468d3cb2f500caf1f5
+  directory: xfwl4
 
 config:
   build-commands:
     - |
-      cd xfce-wayland/xfwl4
+      cd xfwl4
       export PKG_CONFIG_PATH="/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
       # Build with position-independent code to fix relocation issues
       export RUSTFLAGS="-C relocation-model=pic"
@@ -37,5 +37,5 @@ config:
   install-commands:
     - |
       mkdir -p "%{install-root}/usr/bin"
-      cp xfce-wayland/xfwl4/target/release/xfwl4 "%{install-root}/usr/bin/"
+      cp xfwl4/target/release/xfwl4 "%{install-root}/usr/bin/"
 
