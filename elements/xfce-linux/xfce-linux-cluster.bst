@@ -38,6 +38,7 @@ depends:
   - freedesktop-sdk.bst:components/dbus.bst
   - freedesktop-sdk.bst:components/pipewire.bst
   - freedesktop-sdk.bst:components/alsa-lib.bst
+  - xfce-linux/dbus-glib.bst
 
   # Libraries
   - freedesktop-sdk.bst:components/libnotify.bst

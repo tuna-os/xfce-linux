@@ -15,6 +15,7 @@ aliases:
   cpan: https://cpan.metacpan.org/
   crates: https://static.crates.io/
   dbmx: https://dbmx.net/
+  dbus_releases: https://dbus.freedesktop.org/releases/
   dotat: https://dotat.at/prog/
   fedora_rpms: https://src.fedoraproject.org/rpms/
   ghostty_deps: https://deps.files.ghostty.org/
