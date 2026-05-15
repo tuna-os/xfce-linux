@@ -8,9 +8,6 @@ export QT_QPA_PLATFORM=wayland
 export CLUTTER_BACKEND=wayland
 export MOZ_ENABLE_WAYLAND=1
 
-# Full Rust backtraces on crash
-export RUST_BACKTRACE=1
-
 # Use Mesa software renderer (llvmpipe) — no host GPU needed in VM
 # Remove this line to use hardware GPU on real hardware
 export LIBGL_ALWAYS_SOFTWARE=1
