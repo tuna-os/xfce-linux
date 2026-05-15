@@ -26,7 +26,7 @@ sources:
 - kind: git_repo
   url: https://github.com/hanthor/xfwl4.git
   track: main
-  ref: 965bbeef5c9d993056cbc2f81a4b6294b571f8f8
+  ref: 2485d3791132bc29bc23f2c5821c5b4b3154767d
   directory: xfwl4
 - kind: git_repo
   url: https://gitlab.xfce.org/kelnos/xfce-wayland-protocols.git
@@ -40,10 +40,13 @@ config:
       export PKG_CONFIG_PATH="/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
       export RUSTFLAGS="-C relocation-model=pic"
       export GETTEXT_SYSTEM=1
+      export PREFIX=/usr
       cargo build --release --offline --frozen --no-default-features --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
 
   install-commands:
     - |
       mkdir -p "%{install-root}/usr/bin"
       cp xfwl4/target/release/xfwl4 "%{install-root}/usr/bin/"
+      mkdir -p "%{install-root}/usr/share/xfce4/xfwl4"
+      cp xfwl4/resources/defaults "%{install-root}/usr/share/xfce4/xfwl4/defaults"
 
