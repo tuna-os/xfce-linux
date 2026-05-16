@@ -1,0 +1,145 @@
+name: Build and Publish xfce-linux Live ISO
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'xfce-linux/**'
+      - 'justfile'
+      - '.github/workflows/build-iso.yml'
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_upload:
+        description: 'Build ISO but skip uploading to R2 (dry run)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-and-publish:
+    name: Build xfce-linux Live ISO
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          tool-cache: true
+
+      - name: Install dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y just podman buildah rclone mtools xorriso skopeo
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Live ISO
+        run: |
+          df -h /
+          sudo mkdir -p /var/iso-build
+          sudo $(command -v just) installer_channel=stable output_dir=/var/iso-build iso-sd-boot xfce-linux
+          mkdir -p output
+          sudo cp /var/iso-build/*.iso output/ 2>/dev/null || true
+          sudo chown -R "$USER:$(id -gn)" output/
+
+      - name: Compute ISO name
+        id: iso
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "dated=xfce-linux-live-${DATE}-${SHA}.iso" >> "$GITHUB_OUTPUT"
+          echo "path=output/xfce-linux-live.iso" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SHA256 checksum
+        id: checksum
+        run: |
+          ISO="${{ steps.iso.outputs.path }}"
+          DATED="${{ steps.iso.outputs.dated }}"
+          sha256sum "$ISO" | sed "s|${ISO}|${DATED}|" | tee "output/${DATED}-CHECKSUM"
+          sha256sum "$ISO" | sed "s|${ISO}|xfce-linux-live-latest.iso|" > "output/xfce-linux-live-latest.iso-CHECKSUM"
+          echo "path=output/${DATED}-CHECKSUM" >> "$GITHUB_OUTPUT"
+          echo "name=${DATED}-CHECKSUM" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO to Cloudflare R2
+        if: ${{ inputs.skip_upload != true && github.event_name != 'pull_request' }}
+        env:
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_REGION: auto
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.RCLONE_CONFIG_R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.RCLONE_CONFIG_R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: ${{ secrets.RCLONE_CONFIG_R2_ENDPOINT }}
+        run: |
+          ISO="${{ steps.iso.outputs.path }}"
+          DATED="${{ steps.iso.outputs.dated }}"
+          rclone copyto --log-level INFO --checksum --s3-no-check-bucket "$ISO" "R2:testing/${DATED}"
+          rclone copyto --log-level INFO --s3-no-check-bucket "$ISO" "R2:testing/xfce-linux-live-latest.iso"
+          rclone copyto --log-level INFO --s3-no-check-bucket \
+            "${{ steps.checksum.outputs.path }}" "R2:testing/${{ steps.checksum.outputs.name }}"
+        continue-on-error: true
+
+      - name: Boot verification (UEFI + serial)
+        timeout-minutes: 10
+        run: |
+          ISO="${{ steps.iso.outputs.path }}"
+          sudo apt-get install -y qemu-system-x86 ovmf socat imagemagick -qq
+          EFI_CODE=""
+          for f in /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd /usr/share/edk2/ovmf/OVMF_CODE.fd; do
+            [ -f "$f" ] && EFI_CODE="$f" && break
+          done
+          for f in /usr/share/OVMF/OVMF_VARS_4M.fd /usr/share/OVMF/OVMF_VARS.fd /usr/share/edk2/ovmf/OVMF_VARS.fd; do
+            if [ -f "$f" ]; then cp "$f" /tmp/EFI_VARS.fd; break; fi
+          done
+          PFLASH=()
+          [ -n "$EFI_CODE" ] && [ -f /tmp/EFI_VARS.fd ] && \
+            PFLASH+=(-drive "if=pflash,format=raw,readonly=on,file=$EFI_CODE" \
+                     -drive "if=pflash,format=raw,file=/tmp/EFI_VARS.fd")
+          sudo qemu-system-x86_64 \
+            -machine type=q35,accel=kvm -cpu host -m 4G -smp 2 \
+            "${PFLASH[@]}" -cdrom "$ISO" -boot d \
+            -monitor unix:/tmp/qemu-monitor.sock,server,nowait \
+            -serial file:/tmp/serial.log -display none -daemonize
+          for i in $(seq 1 30); do [ -S /tmp/qemu-monitor.sock ] && break; sleep 2; done
+          for i in $(seq 1 60); do
+            sudo grep -q "XFCE_LINUX_LIVE_READY" /tmp/serial.log 2>/dev/null && { echo "==> Ready after $((i*5))s"; break; }
+            [ "$i" -eq 60 ] && echo "WARNING: ready token not seen after 5m" || true
+            sleep 5
+          done
+          echo "screendump /tmp/screenshot.ppm" | sudo socat - UNIX-CONNECT:/tmp/qemu-monitor.sock || true
+          sleep 2
+          sudo test -f /tmp/screenshot.ppm && \
+            { sudo convert /tmp/screenshot.ppm screenshot.png 2>/dev/null || sudo cp /tmp/screenshot.ppm screenshot.png; }
+          echo "quit" | sudo socat - UNIX-CONNECT:/tmp/qemu-monitor.sock || true
+          sudo grep -qE "XFCE_LINUX_LIVE_READY|Finished live-ready\.service" /tmp/serial.log || \
+            { echo "ERROR: Live environment did not reach ready state"; sudo tail -50 /tmp/serial.log; exit 1; }
+
+      - name: Upload ISO as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.iso.outputs.dated }}
+          path: ${{ steps.iso.outputs.path }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload checksum as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksum-${{ steps.iso.outputs.dated }}
+          path: ${{ steps.checksum.outputs.path }}
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload boot screenshot as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: boot-screenshot-xfce-linux
+          path: screenshot.png
+          if-no-files-found: warn

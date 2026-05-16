@@ -1,0 +1,8 @@
+output/
+*.sfs
+*.tar
+*.iso
+*.log
+*.oci.tar
+*-cs-staging/
+*-sfs-root/
