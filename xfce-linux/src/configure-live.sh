@@ -88,12 +88,25 @@ chown -R liveuser:liveuser /home/liveuser/.config
 
 # ── GDM autologin into XFCE Wayland session ───────────────────────────────────
 # xfce-linux ships xfce-wayland as the default GDM session.
+# DefaultSession must be set so GDM launches XFCE and not GNOME.
 mkdir -p /etc/gdm
 cat > /etc/gdm/custom.conf << 'GDMEOF'
 [daemon]
 AutomaticLoginEnable=True
 AutomaticLogin=liveuser
+DefaultSession=xfce-wayland
+WaylandEnable=True
 GDMEOF
+
+# Tell AccountsService that liveuser should use the xfce-wayland session.
+# Without this, GDM may fall back to whatever session was last used globally.
+mkdir -p /var/lib/AccountsService/users
+cat > /var/lib/AccountsService/users/liveuser << 'ACEOF'
+[User]
+Session=xfce-wayland
+XSession=xfce-wayland
+SystemAccount=false
+ACEOF
 
 # ── Mask sleep/suspend ────────────────────────────────────────────────────────
 systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
@@ -154,7 +167,7 @@ Exec=flatpak run --env=VANILLA_CUSTOM_RECIPE=/run/host/etc/bootc-installer/recip
 Icon=system-software-install
 Terminal=false
 Type=Application
-X-GNOME-Autostart-enabled=true
+NotShowIn=KDE;
 DTEOF
 
 mkdir -p /usr/share/applications
