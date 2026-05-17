@@ -155,9 +155,9 @@ cp "$SCRIPT_DIR/etc/bootc-installer/images.json" /etc/bootc-installer/images.jso
 cp "$SCRIPT_DIR/etc/bootc-installer/recipe.json"  /etc/bootc-installer/recipe.json
 touch /etc/bootc-installer/live-iso-mode
 
-# ── Installer autostart ───────────────────────────────────────────────────────
-INSTALLER_APP_ID="org.bootcinstaller.Installer"
-[[ "${INSTALLER_CHANNEL:-stable}" == "dev" ]] && INSTALLER_APP_ID="org.bootcinstaller.Installer.Devel"
+# ── Installer autostart (XFCE variant) ────────────────────────────────────────
+INSTALLER_APP_ID="org.xfceinstaller.Installer"
+[[ "${INSTALLER_CHANNEL:-stable}" == "dev" ]] && INSTALLER_APP_ID="org.xfceinstaller.Installer.Devel"
 
 mkdir -p /etc/xdg/autostart
 cat > /etc/xdg/autostart/tuna-installer.desktop << DTEOF
