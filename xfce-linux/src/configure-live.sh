@@ -19,9 +19,11 @@ else
 fi
 
 # ── Live user ─────────────────────────────────────────────────────────────────
-useradd --create-home --uid 1000 --user-group \
-    --comment "Live User" liveuser || true
-passwd --delete liveuser
+if ! id liveuser &>/dev/null; then
+    useradd --create-home --uid 1000 --user-group \
+        --comment "Live User" liveuser
+fi
+passwd --delete liveuser || true
 
 # Debug builds: enable SSH and root access for testing.
 if [[ "${DEBUG:-0}" == "1" ]]; then
