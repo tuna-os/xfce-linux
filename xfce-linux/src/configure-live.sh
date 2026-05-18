@@ -19,11 +19,10 @@ else
 fi
 
 # ── Live user ─────────────────────────────────────────────────────────────────
-if ! id liveuser &>/dev/null; then
-    useradd --create-home --uid 1000 --user-group \
-        --comment "Live User" liveuser
-fi
-passwd --delete liveuser || true
+# Create or ensure liveuser exists with no password
+getent passwd liveuser >/dev/null 2>&1 || useradd --create-home --uid 1000 --user-group \
+    --comment "Live User" liveuser
+passwd --delete liveuser 2>/dev/null || true
 
 # Debug builds: enable SSH and root access for testing.
 if [[ "${DEBUG:-0}" == "1" ]]; then
