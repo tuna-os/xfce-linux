@@ -64,22 +64,6 @@ RUN --mount=type=bind,source=src,target=/src \
     --mount=type=cache,target=/var/cache/flatpak-dl,id=xfce-linux-flatpak \
     /src/install-flatpaks.sh
 
-# ── Offline installation: pre-load xfce-linux image ──────────────────────────
-# Pull the xfce-linux OCI image into containers-storage so bootc-installer
-# can use it offline (no network required for installation).
-ARG BASE_IMAGE
-RUN podman pull --quiet "${BASE_IMAGE}" && \
-    echo "✓ Pre-loaded ${BASE_IMAGE} for offline installation"
-
 # ── Live-environment configure layer ─────────────────────────────────────────
 COPY src/ /tmp/src/
 RUN chmod +x /tmp/src/configure-live.sh && /tmp/src/configure-live.sh
-
-ARG BASE_IMAGE
-# Patch installer configs to use the pre-loaded local image for offline installs.
-# Use containers-storage: URI so bootc-installer reads from the local store.
-RUN sed -i "s|\"imgref\": \".*\"|\"imgref\": \"containers-storage:${BASE_IMAGE}\"|g" \
-    /etc/bootc-installer/images.json && \
-    sed -i "s|\"default_image\": \".*\"|\"default_image\": \"containers-storage:${BASE_IMAGE}\"|g" \
-    /etc/bootc-installer/images.json && \
-    echo "✓ Configured bootc-installer for offline installation"
