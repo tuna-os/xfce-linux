@@ -20,7 +20,7 @@ on:
 jobs:
   build-and-publish:
     name: Build xfce-linux Live ISO
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.ACTIONS_RUNNER_LABEL || 'ubuntu-24.04' }}
     permissions:
       contents: read
       packages: read
