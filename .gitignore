@@ -9,6 +9,8 @@ buildstream-*.log
 *.qcow2
 *.fd
 .ovmf*
+*.sock
+*.pid
 
 # Container images and archives
 *.tar
@@ -54,3 +56,9 @@ env/
 
 # Node modules (if used in any scripts)
 node_modules/
+
+# Local VM/debug outputs kept at repo root during manual bring-up
+/$LOG
+/session.txt
+/*.png
+/*.ppm
