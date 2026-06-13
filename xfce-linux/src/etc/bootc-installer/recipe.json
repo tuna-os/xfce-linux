@@ -1,0 +1,43 @@
+{
+  "log_file": "/var/log/bootc-installer.log",
+  "distro_name": "XFCE Linux",
+  "distro_logo": "resource:///org/bootcinstaller/Installer/images/aurora.png",
+  "imgref": "ghcr.io/hanthor/xfce-linux:latest",
+  "local_imgref": "containers-storage:ghcr.io/hanthor/xfce-linux:latest",
+  "bootloader": "systemd",
+  "composeFsBackend": false,
+  "tour": {
+    "welcome": {
+      "title": "Welcome to XFCE Linux",
+      "description": "XFCE Linux is an immutable XFCE desktop on freedesktop-sdk with daily bootc updates. Thanks for testing!"
+    },
+    "features": {
+      "title": "XFCE on Wayland",
+      "description": "Ships XFCE4 running natively on Wayland via xfwl4, a custom Wayland compositor built for XFCE."
+    },
+    "community": {
+      "title": "Getting Started",
+      "description": "After installation, updates apply automatically. Use Flatpak for additional apps."
+    },
+    "completed": {
+      "title": "Ready to Install",
+      "description": "Select a disk to install XFCE Linux. The process takes a few minutes."
+    }
+  },
+  "steps": {
+    "welcome": {
+      "template": "welcome",
+      "protected": true
+    },
+    "image": {
+      "template": "image",
+      "protected": true
+    },
+    "disk": {
+      "template": "disk"
+    },
+    "encryption": {
+      "template": "encryption"
+    }
+  }
+}

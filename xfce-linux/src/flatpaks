@@ -1,0 +1,4 @@
+# Flatpaks pre-installed in the xfce-linux live ISO.
+# One Flatpak ref per line; blank lines and lines starting with # are ignored.
+# The tuna-installer is installed below by configure-live.sh depending on
+# INSTALLER_CHANNEL; do not list it here.

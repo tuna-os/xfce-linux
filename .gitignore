@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BuildStream cache and artifacts
 .bst/
 .cache/
@@ -62,3 +63,14 @@ node_modules/
 /session.txt
 /*.png
 /*.ppm
+||||||| empty tree
+=======
+output/
+*.sfs
+*.tar
+*.iso
+*.log
+*.oci.tar
+*-cs-staging/
+*-sfs-root/
+>>>>>>> iso/main
