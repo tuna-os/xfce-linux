@@ -1,0 +1,59 @@
+name: Lint
+
+# Runs shellcheck and yamllint on PRs and pushes to main.
+# Minimum guardrail to catch script errors before they break builds.
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE*'
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          additional_files: >
+            build-xfwl4.sh
+            xfce-linux/src/build-iso.sh
+            xfce-linux/src/configure-live.sh
+            xfce-linux/src/install-flatpaks.sh
+            xfce-linux/src/dracut/95xfce-linux-isofile/module-setup.sh
+            xfce-linux/src/dracut/95xfce-linux-isofile/xfce-linux-isofile.sh
+          severity: warning
+
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+          config_data: |
+            extends: default
+            rules:
+              line-length: disable
+              document-start: disable
+              truthy: disable
+              comments-indentation: disable
