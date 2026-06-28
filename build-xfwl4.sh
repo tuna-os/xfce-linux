@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -euo pipefail
 dnf install -y rust cargo gcc meson ninja-build \
     pkgconf-pkg-config wayland-devel wayland-protocols \
