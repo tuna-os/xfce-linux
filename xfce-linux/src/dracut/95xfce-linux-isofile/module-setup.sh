@@ -1,3 +1,4 @@
+# shellcheck disable=SC2154
 #!/bin/bash
 # Dracut module: support booting xfce-linux ISO as a file from Ventoy-style media.
 
