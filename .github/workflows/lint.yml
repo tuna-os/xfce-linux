@@ -28,17 +28,22 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run shellcheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
-          additional_files: >
-            build-xfwl4.sh
-            xfce-linux/src/build-iso.sh
-            xfce-linux/src/configure-live.sh
-            xfce-linux/src/install-flatpaks.sh
-            xfce-linux/src/dracut/95xfce-linux-isofile/module-setup.sh
-            xfce-linux/src/dracut/95xfce-linux-isofile/xfce-linux-isofile.sh
-          severity: warning
+        run: |
+          # Scan shell scripts, excluding vendored files/ directory
+          ERROR=0
+          while IFS= read -r -d '' f; do
+            echo "Checking: $f"
+            shellcheck -S warning "$f" || ERROR=1
+          done < <(find . -not -path './files/*' -name '*.sh' -type f -print0)
+          # Also check the additional files explicitly
+          for f in             build-xfwl4.sh             xfce-linux/src/build-iso.sh             xfce-linux/src/configure-live.sh             xfce-linux/src/install-flatpaks.sh             xfce-linux/src/dracut/95xfce-linux-isofile/module-setup.sh             xfce-linux/src/dracut/95xfce-linux-isofile/xfce-linux-isofile.sh
+          do
+            [ -f "$f" ] || continue
+            echo "Checking (explicit): $f"
+            shellcheck -S warning "$f" || ERROR=1
+          done
+          exit $ERROR
+        shell: bash
 
   yamllint:
     name: yamllint
