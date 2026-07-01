@@ -1,10 +1,10 @@
 {
-  "default_image": "ghcr.io/hanthor/xfce-linux:latest",
+  "default_image": "ghcr.io/tuna-os/xfce-linux:latest",
   "fallback_flatpaks": [],
   "images": [
     {
       "name": "XFCE Linux",
-      "imgref": "ghcr.io/hanthor/xfce-linux:latest",
+      "imgref": "ghcr.io/tuna-os/xfce-linux:latest",
       "desc": "XFCE Linux — immutable XFCE Wayland desktop",
       "icon": "resource:///org/bootcinstaller/Installer/images/aurora.png",
       "bootloader": "systemd",
