@@ -16,7 +16,11 @@ OUTPUT_ISO="${3:?Usage: build-iso.sh <boot-files-tar> <squashfs-img> <output-iso
 LABEL="XFCE_LINUX_LIVE"
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/iso-build.XXXXXX")
-trap "chmod -R u+rwX '${WORK}' 2>/dev/null; rm -rf '${WORK}'" EXIT
+cleanup() {
+  chmod -R u+rwX "${WORK}" 2>/dev/null
+  rm -rf "${WORK}"
+}
+trap cleanup EXIT
 
 BOOT_DIR="${WORK}/boot-files"
 ISO_ROOT="${WORK}/iso-root"
