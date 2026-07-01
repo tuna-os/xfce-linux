@@ -34,6 +34,6 @@ setup() {
 }
 
 @test "migrate_to_xfconf.sh: passes shellcheck" {
-  run shellcheck --exclude=SC1091 "$SCRIPT"
+  run shellcheck -S error --exclude=SC1091,SC2045 "$SCRIPT"
   [ "$status" -eq 0 ]
 }

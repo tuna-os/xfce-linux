@@ -47,6 +47,26 @@ jobs:
             python3 -m py_compile "$f"
           done
 
+      - name: Install pytest
+        run: |
+          sudo apt-get install -y -qq python3-pytest 2>/dev/null || pip3 install --user pytest 2>/dev/null || true
+
+      - name: Run pytest tests
+        shell: bash
+        run: |
+          echo "=== Pytest Tests ==="
+          FAILED=0
+          if python3 -m pytest --version &>/dev/null; then
+            if ls tests/pytest/*.py &>/dev/null; then
+              python3 -m pytest tests/pytest/ -v --tb=short || FAILED=1
+            else
+              echo "  No pytest test files found"
+            fi
+          else
+            echo "  pytest not available — skipping"
+          fi
+          exit $FAILED
+
       - name: Test summary
         if: always()
         run: |
@@ -56,3 +76,4 @@ jobs:
           echo "| Python | $(find tests/pytest -name '*.py' -type f 2>/dev/null | wc -l) |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Run locally: \`bats tests/bats/*.bats\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run locally: \`python3 -m pytest tests/pytest/ -v\`" >> "$GITHUB_STEP_SUMMARY"

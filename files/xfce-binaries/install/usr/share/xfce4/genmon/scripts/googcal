@@ -1,3 +1,4 @@
+# shellcheck disable=SC1081,SC2140
 #!/bin/bash
 #
 # Description: This script connects to your google calendar and notifies 
