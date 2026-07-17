@@ -38,7 +38,9 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y just podman buildah rclone mtools xorriso skopeo
 
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ env.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u ${{ github.actor }} --password-stdin
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Live ISO
         run: |
