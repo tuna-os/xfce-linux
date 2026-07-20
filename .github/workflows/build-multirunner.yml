@@ -120,7 +120,7 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Setup ORAS
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       - name: Cache BuildStream sources
         uses: actions/cache@v4
@@ -210,7 +210,7 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Setup ORAS
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       - name: Cache BuildStream sources
         uses: actions/cache@v4
@@ -330,7 +330,7 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Setup ORAS
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       - name: Login to GHCR
         run: echo "$GITHUB_TOKEN" | oras login ghcr.io -u ${{ github.actor }} --password-stdin
