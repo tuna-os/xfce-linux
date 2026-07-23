@@ -5,18 +5,13 @@ name: Build xfce-linux (Multi-Runner)
 # Same pattern as tuna-os/tromso's build-tromso-multirunner.yml.
 
 on:
-  push:
-    branches: [main, stable]
-    paths:
-      - 'elements/**'
-      - 'project.conf'
-      - 'include/**'
-      - 'buildstream-ci.conf'
-      - 'scripts/ci-build-matrix.py'
-      - '.github/workflows/build-multirunner.yml'
+  # No push trigger: this build takes hours and we don't need a fresh run
+  # on every commit — the daily schedule is enough. Use workflow_dispatch
+  # to build on demand.
   schedule:
-    # Daily at 05:00 UTC
-    - cron: '0 5 * * *'
+    # Daily at 23:30 UTC (5:00 AM IST) — early morning, 1h before tromso's
+    # slot to reduce org-wide runner contention (#93).
+    - cron: '30 23 * * *'
   workflow_dispatch:
     inputs:
       push_image:
