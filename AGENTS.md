@@ -37,7 +37,7 @@ just boot-iso-vnc xfce-linux        # boot ISO, VNC on :10, serial telnet 4445
 just luks-test-qemu xfce-linux      # full LUKS install e2e (needs built ISO)
 ```
 
-Heavy builds should run on the `kanpur` box or in CI, not on a laptop.
+Heavy builds should run in CI, not on a laptop.
 
 ## Gotchas (hard-won; don't reintroduce)
 
