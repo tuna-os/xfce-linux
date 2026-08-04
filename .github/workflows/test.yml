@@ -74,7 +74,7 @@ jobs:
       # job has neither /dev/fuse nor CAP_SYS_ADMIN by default.
       options: --privileged --device /dev/fuse
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate full element graph
         run: |
           bst --no-interactive show --deps all --format "%{name} %{state}" oci/xfce-linux.bst > /tmp/graph.txt
@@ -84,7 +84,7 @@ jobs:
     name: Just Parse
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: extractions/setup-just@v4
       - name: Parse justfiles
         run: |
