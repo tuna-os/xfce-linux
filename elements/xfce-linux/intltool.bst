@@ -6,6 +6,7 @@ depends:
 
 build-depends:
   - freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
+  - freedesktop-sdk.bst:components/perl-xml-parser.bst
 
 sources:
 - kind: tar
