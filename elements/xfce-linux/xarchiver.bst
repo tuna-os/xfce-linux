@@ -11,7 +11,7 @@ depends:
 build-depends:
   - freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
   - freedesktop-sdk.bst:components/gettext.bst
-  - freedesktop-sdk.bst:components/intltool.bst
+  - xfce-linux/intltool.bst
 
 sources:
 - kind: git_repo
