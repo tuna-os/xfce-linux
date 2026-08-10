@@ -1,5 +1,10 @@
-# XFCE Linux default settings
-# Applied at build time into the dconf database
+# XFCE Linux opinionated desktop defaults (adw-gtk3 dark theme, icons, layout)
+
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='adw-gtk3-dark'
+icon-theme='Adwaita'
+font-name='Sans 10'
 
 [org/xfce/desktop/screensaver]
 lock-enabled=true

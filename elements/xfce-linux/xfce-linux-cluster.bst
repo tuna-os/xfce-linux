@@ -12,6 +12,8 @@ description: |
 depends:
   # The pre-built XFCE binaries (includes libs in x86_64-linux-gnu for multilib compatibility)
   - xfce-linux/xfce-binaries.bst
+  # xarchiver — GTK+ archive manager (xfce-linux#56)
+  - xfce-linux/xarchiver.bst
   # XFCE default settings
   - xfce-linux/dconf-config.bst
   # XFCE users and config
