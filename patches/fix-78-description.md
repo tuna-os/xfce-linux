@@ -2,55 +2,41 @@
 
 ## Root Cause Analysis
 
-The multi-runner chunk jobs time out on 2-core GitHub-hosted runners after
-270 minutes (the budget). The chunks' build step exits with code 124 (timeout),
-which is NOT softened for chunks in the reusable workflow (`tuna-os/bst-ci`),
-unlike `build_core` which has `soft_core_budget: true`.
+**Run 31228685898** (2026-08-07): 9 of 10 chunk jobs hit the 270-minute build
+budget (exit 124) on 2-core GitHub-hosted runners. Each chunk transitively
+needs most of the shared closure, which won't fit in 270 minutes at 2 cores.
 
-When chunks fail with timeout, the `multirunner` reusable workflow reports
-`failure`. The caller's `build_final` job has:
-```yaml
-if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-```
-This skips `build_final` entirely, so the image is never published.
+The reusable workflow (`tuna-os/bst-ci`) softens the core budget timeout
+(`soft_core_budget: true`, resets rc=0 on exit 124) but has **no equivalent
+for chunks**. When a chunk times out, the step exits 124 -> job fails ->
+`multirunner` result is `failure` -> `build_final` is skipped because its
+condition gates on `!contains(needs.*.result, 'failure')`.
 
-## Changes Required
+The Live ISO then fails with `manifest unknown` because no image is published.
 
-### 1. `build-multirunner.yml` (this repo) — relax build_final gate
+## Changes
 
-```diff
--    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-+    # Allow build_final to run even when chunks failed (including budget
-+    # timeouts), because chunks always push their partial CAS on timeout
-+    # via if: always().  Skipping build_final on chunk failure guarantees
-+    # the image is never published.  If chunks had genuine build errors
-+    # (not timeouts), build_final will also fail — which is correct.
-+    #
-+    # We still skip on cancelled: a cancelled run means CAS pushes may
-+    # not have completed, so the final assembly would start from a
-+    # half-written cache.
-+    if: always() && !contains(needs.*.result, 'cancelled')
-```
+### 1. Relax `build_final` gate (this repo)
 
-### 2. `build-multirunner.yml` — pass runner_label from repo vars
+Remove `failure` from the `build_final` condition. Chunks always push partial
+CAS on timeout (via `if: always()` in the reusable workflow), so skipping
+`build_final` guarantees the image is never published. If chunks had genuine
+build errors, `build_final` will also fail — that's correct.
 
-```diff
-       image_name: xfce-linux
-       bst_target: oci/xfce-linux.bst
-       num_chunks: ${{ inputs.num_chunks || '10' }}
-       core_split: "200"
-+      runner_label: ${{ vars.ACTIONS_RUNNER_LABEL || 'ubuntu-24.04' }}
-```
+### 2. Pass `runner_label` from repo vars
 
-### 3. `tuna-os/bst-ci` (upstream reusable workflow) — soften chunk budget timeouts
+Route chunk jobs through `ACTIONS_RUNNER_LABEL` if set, so self-hosted
+runners (kanpur) can be used without a workflow edit.
 
-The chunk build step in `multirunner-build.yml` needs a `soft_chunk_budget`
-parameter (analogous to `soft_core_budget`). When a chunk exhausts its
-270-minute budget, exit code 124 should be reset to 0 so the chunk job
-reports success (its partial CAS is already pushed via `if: always()`).
+### 3. Upstream fix needed (`tuna-os/bst-ci`)
 
-## Why This Wasn't Pushed Directly
+The reusable workflow's chunk build step should soften the budget timeout
+(exit 124 -> rc=0), mirroring `soft_core_budget`. Without this, every chunk
+timeout still reports `failure` (even though partial CAS is salvaged).
 
-The scanner agent's GitHub App token lacks the `workflows` permission,
-which GitHub requires for pushing changes to `.github/workflows/` files.
-This is a separate infrastructure issue.
+## ⚠️ Note: Workflow files could not be pushed directly
+
+The scanner agent's GitHub App token lacks the `workflows` permission
+required to push `.github/workflows/` changes. The patch is included in
+this PR as `patches/fix-78-multi-runner-hang.patch`. A user with direct
+write access should apply it.
