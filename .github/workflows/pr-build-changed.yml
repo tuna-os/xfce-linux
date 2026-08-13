@@ -2,15 +2,10 @@ name: PR Build Changed Elements
 
 # Builds only the .bst elements a PR touches, against the warm GHCR core
 # CAS cache. This is what turns "lint passed" into "the change compiles".
-# Informational (not a required check) until the world rebuild converges
-# and the caches are warm — then promote it to required.
+# Required check: no paths filter so it reports on every PR (preventing automerge deadlocks).
 
 on:
   pull_request:
-    paths:
-      - 'elements/**'
-      - 'project.conf'
-      - 'include/**'
 
 concurrency:
   group: pr-build-${{ github.ref }}

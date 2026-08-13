@@ -1,0 +1,37 @@
+diff --git a/.github/workflows/build-multirunner.yml b/.github/workflows/build-multirunner.yml
+index 9a66377..22dcc5d 100644
+--- a/.github/workflows/build-multirunner.yml
++++ b/.github/workflows/build-multirunner.yml
+@@ -53,6 +53,10 @@ jobs:
+       bst_target: oci/xfce-linux.bst
+       num_chunks: ${{ inputs.num_chunks || '10' }}
+       core_split: "200"
++      # Passthrough: if ACTIONS_RUNNER_LABEL is set, route chunk jobs to
++      # self-hosted runners (e.g. kanpur).  When unset, the reusable
++      # workflow's default (ubuntu-24.04, 2-core) is used.
++      runner_label: ${{ vars.ACTIONS_RUNNER_LABEL || 'ubuntu-24.04' }}
+       # Elements that several chunks each rebuilt from scratch in run
+       # 31228685898, with the measured cost of one build and how many of the
+       # ten chunks paid it. Building them in core instead puts them in the
+@@ -97,10 +101,19 @@ jobs:
+   # ── Phase 4: Final assembly + push ──────────────────────────────────
+   build_final:
+     needs: multirunner
+-    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
++    # Allow build_final to run even when chunks failed (including budget
++    # timeouts), because chunks always push their partial CAS on timeout
++    # via if: always().  Skipping build_final on chunk failure guarantees
++    # the image is never published.  If chunks had genuine build errors
++    # (not timeouts), build_final will also fail — which is correct.
++    #
++    # We still skip on cancelled: a cancelled run means CAS pushes may
++    # not have completed, so the final assembly would start from a
++    # half-written cache.
++    if: always() && !contains(needs.*.result, 'cancelled')
+     # ⚠️ Was Blacksmith build-amd64 (32-core) final assembly. Now 2-core
+     # GitHub-hosted — candidate for larger runner/kanpur if it nears 6h.
+-    runs-on: ubuntu-24.04
++    runs-on: ${{ vars.ACTIONS_RUNNER_LABEL && format('runs-on={0}/runner={1}', github.run_id, vars.ACTIONS_RUNNER_LABEL) || 'ubuntu-24.04' }}
+     timeout-minutes: 360
+     permissions:
+       contents: read

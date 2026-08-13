@@ -22,6 +22,150 @@ sources:
   track: "0.9.0"
   ref: f3f32498851c6775a9d9ca0d46239b9a6de78204
   directory: greetd
+- kind: cargo2
+  cargo-lock: greetd/Cargo.lock
+  ref:
+  -
+    name: async-trait
+    version: 0.1.60
+  -
+    name: autocfg
+    version: 1.1.0
+  -
+    name: bitflags
+    version: 1.3.2
+  -
+    name: bytes
+    version: 1.3.0
+  -
+    name: cfg-if
+    version: 1.0.0
+  -
+    name: enquote
+    version: 1.1.0
+  -
+    name: getopts
+    version: 0.2.21
+  -
+    name: itoa
+    version: 1.0.5
+  -
+    name: libc
+    version: 0.2.139
+  -
+    name: log
+    version: 0.4.17
+  -
+    name: memchr
+    version: 2.5.0
+  -
+    name: memoffset
+    version: 0.7.1
+  -
+    name: mio
+    version: 0.8.5
+  -
+    name: nix
+    version: 0.26.1
+  -
+    name: pam-sys
+    version: 0.5.6
+  -
+    name: pin-project-lite
+    version: 0.2.9
+  -
+    name: pin-utils
+    version: 0.1.0
+  -
+    name: proc-macro2
+    version: 1.0.49
+  -
+    name: quote
+    version: 1.0.23
+  -
+    name: rpassword
+    version: 5.0.1
+  -
+    name: ryu
+    version: 1.0.12
+  -
+    name: serde
+    version: 1.0.152
+  -
+    name: serde_derive
+    version: 1.0.152
+  -
+    name: serde_json
+    version: 1.0.91
+  -
+    name: signal-hook-registry
+    version: 1.4.0
+  -
+    name: socket2
+    version: 0.4.7
+  -
+    name: static_assertions
+    version: 1.1.0
+  -
+    name: syn
+    version: 1.0.107
+  -
+    name: thiserror
+    version: 1.0.38
+  -
+    name: thiserror-impl
+    version: 1.0.38
+  -
+    name: tokio
+    version: 1.24.0
+  -
+    name: tokio-macros
+    version: 1.8.2
+  -
+    name: unicode-ident
+    version: 1.0.6
+  -
+    name: unicode-width
+    version: 0.1.10
+  -
+    name: users
+    version: 0.11.0
+  -
+    name: wasi
+    version: 0.11.0+wasi-snapshot-preview1
+  -
+    name: winapi
+    version: 0.3.9
+  -
+    name: winapi-i686-pc-windows-gnu
+    version: 0.4.0
+  -
+    name: winapi-x86_64-pc-windows-gnu
+    version: 0.4.0
+  -
+    name: windows-sys
+    version: 0.42.0
+  -
+    name: windows_aarch64_gnullvm
+    version: 0.42.0
+  -
+    name: windows_aarch64_msvc
+    version: 0.42.0
+  -
+    name: windows_i686_gnu
+    version: 0.42.0
+  -
+    name: windows_i686_msvc
+    version: 0.42.0
+  -
+    name: windows_x86_64_gnu
+    version: 0.42.0
+  -
+    name: windows_x86_64_gnullvm
+    version: 0.42.0
+  -
+    name: windows_x86_64_msvc
+    version: 0.42.0
 
 config:
   build-commands:
@@ -29,14 +173,9 @@ config:
     cd greetd
     export PKG_CONFIG_PATH="/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
     export RUSTFLAGS="-C relocation-model=pic"
-    # UNVERIFIED: greetd's Cargo.lock isn't vendored in-tree (no vendor/ dir,
-    # no .cargo/config.toml at the pinned ref — checked directly against the
-    # upstream repo). This --offline --frozen invocation mirrors xfwl4-src.bst's
-    # existing pattern in this repo, but that pattern's own success has never
-    # been confirmed by a completed build either (the multi-runner pipeline
-    # hasn't finished an x86_64 build this session, let alone reached this
-    # element). If this fails on crate resolution, a cargo-sources vendoring
-    # element needs to land ahead of this one — see tuna-os/xfce-linux#39.
+    # Cargo dependencies are vendored via the cargo2 source (above) which
+    # resolves + downloads all crates from Cargo.lock at fetch time.
+    # --offline --frozen can then be used during the sandboxed build.
     cargo build --release --offline --frozen --workspace --exclude fakegreet
 
   install-commands:

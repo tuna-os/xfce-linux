@@ -1,8 +1,9 @@
 name: Promote main to stable
 
 # Release bookmark automation (dakota-style): verifies the newest nightly
-# build + ISO on main both succeeded, then fast-forwards the `stable` branch
-# to that commit and dispatches the stable build.
+# build + ISO + installer E2E checks on main all succeeded, then fast-forwards
+# the `stable` branch, dispatches the stable build, and verifies its published
+# image and ISO artifacts before declaring the release ready.
 #
 # Why the explicit dispatch: pushes made with GITHUB_TOKEN do not trigger
 # event workflows, but workflow_dispatch via the API does — and the ISO
@@ -22,6 +23,7 @@ on:
 permissions:
   contents: write
   actions: write
+  packages: read
 
 concurrency:
   group: promote-stable
@@ -35,37 +37,55 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Health check — latest nightly build + ISO green on main
+      - name: Health check — latest nightly build + matching ISO green on main
         id: health
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Check the newest run, including in-progress runs. Looking only at
+          # completed runs can promote an older green commit while a newer
+          # nightly is still running. The ISO must also be green for the same
+          # commit: the ISO workflow is triggered by the image build, but a
+          # stale successful ISO must never satisfy this release gate.
           check() {
             local wf="$1"
             local run
-            run=$(gh run list --workflow "$wf" --branch main --limit 10 \
+            run=$(gh run list --workflow "$wf" --branch main --limit 20 \
                     --json conclusion,status,headSha \
-                    --jq '[.[] | select(.status == "completed")][0]')
-            [ -n "$run" ] || { echo "no completed runs of $wf"; return 1; }
-            local concl sha
+                    --jq '.[0] // empty')
+            [ -n "$run" ] || { echo "no runs of $wf" >&2; return 1; }
+            local status concl sha
+            status=$(echo "$run" | jq -r .status)
             concl=$(echo "$run" | jq -r .conclusion)
             sha=$(echo "$run" | jq -r .headSha)
-            echo "$wf: $concl @ $sha"
-            [ "$concl" = "success" ] || return 1
+            echo "$wf: $status/$concl @ $sha" >&2
+            [ "$status" = "completed" ] && [ "$concl" = "success" ] || return 1
             echo "$sha"
           }
           set +e
-          BUILD_SHA=$(check "Build xfce-linux (Multi-Runner)" | tail -1)
+          BUILD_SHA=$(check "Build xfce-linux (Multi-Runner)")
           BUILD_OK=$?
-          ISO_OK=1
-          check "Build and Publish xfce-linux Live ISO" >/dev/null && ISO_OK=0
+          ISO_SHA=$(check "Build and Publish xfce-linux Live ISO")
+          ISO_OK=$?
+          # The install E2E workflows only have to be green; their SHA is not
+          # part of the promotion identity, so discard it.
+          check "Plain Install End-to-End Test" >/dev/null
+          PLAIN_OK=$?
+          check "LUKS Install End-to-End Test" >/dev/null
+          LUKS_OK=$?
           set -e
-          if [ $BUILD_OK -ne 0 ] || [ $ISO_OK -ne 0 ]; then
+          MATCH_OK=0
+          if [ $BUILD_OK -eq 0 ] && [ $ISO_OK -eq 0 ] && [ "$BUILD_SHA" != "$ISO_SHA" ]; then
+            echo "::error::Nightly build and ISO succeeded for different commits: build=$BUILD_SHA iso=$ISO_SHA"
+            MATCH_OK=1
+          fi
+          if [ $BUILD_OK -ne 0 ] || [ $ISO_OK -ne 0 ] || \
+             [ $PLAIN_OK -ne 0 ] || [ $LUKS_OK -ne 0 ] || [ $MATCH_OK -ne 0 ]; then
             if [ "${{ inputs.force }}" = "true" ]; then
               echo "Health checks failed but force=true — promoting HEAD of main."
               BUILD_SHA=$(git rev-parse origin/main)
             else
-              echo "::error::Health checks failed (build ok=$BUILD_OK, iso ok=$ISO_OK); not promoting. Use force=true to override."
+              echo "::error::Health checks failed (build=$BUILD_OK, iso=$ISO_OK, plain-install=$PLAIN_OK, luks=$LUKS_OK, matching SHA ok=$((1 - MATCH_OK))); not promoting. Use force=true to override."
               exit 1
             fi
           fi
@@ -81,6 +101,75 @@ jobs:
           echo "stable → ${SHA}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Dispatch stable build
+        id: dispatch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run "Build xfce-linux (Multi-Runner)" --ref stable
+
+      - name: Wait for stable build and ISO publication
+        timeout-minutes: 720
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_REGION: auto
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.health.outputs.sha }}"
+
+          wait_for_run() {
+            local workflow="$1"
+            local run status conclusion
+            for _ in $(seq 1 720); do
+              run=$(gh run list --workflow "$workflow" --branch stable \
+                --commit "$SHA" --limit 20 \
+                --json status,conclusion \
+                --jq '.[0] // empty')
+              if [ -n "$run" ]; then
+                status=$(echo "$run" | jq -r .status)
+                conclusion=$(echo "$run" | jq -r .conclusion)
+                echo "$workflow: $status/$conclusion for $SHA"
+                if [ "$status" = completed ]; then
+                  [ "$conclusion" = success ] || { echo "::error::$workflow failed"; exit 1; }
+                  return 0
+                fi
+              else
+                echo "$workflow: waiting for a run for $SHA"
+              fi
+              sleep 60
+            done
+            echo "::error::Timed out waiting for $workflow for $SHA"
+            exit 1
+          }
+
+          wait_for_run "Build xfce-linux (Multi-Runner)"
+          wait_for_run "Build and Publish xfce-linux Live ISO"
+
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends rclone skopeo
+
+          echo "$GH_TOKEN" | sudo skopeo login ghcr.io --username "github-actions[bot]" --password-stdin
+          sudo skopeo inspect "docker://ghcr.io/tuna-os/xfce-linux:stable" >/dev/null
+
+          tags=$(gh api --paginate \
+            "/orgs/tuna-os/packages/container/xfce-linux/versions?per_page=100" \
+            --jq '.[].metadata.container.tags[]?' | sort -u)
+          grep -qx stable <<<"$tags" || { echo "::error::GHCR stable tag missing"; exit 1; }
+          grep -qx "$SHA" <<<"$tags" || { echo "::error::GHCR commit tag missing: $SHA"; exit 1; }
+          grep -Eq '^stable-[0-9]{8}$' <<<"$tags" || { echo "::error::GHCR dated stable tag missing"; exit 1; }
+
+          prefix="R:${R2_BUCKET}/xfce-linux/stable"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          rclone lsf "$prefix/" | grep -qx 'xfce-linux-live-latest.iso' || \
+            { echo "::error::stable ISO missing from R2"; exit 1; }
+          rclone lsf "$prefix/" | grep -qx 'xfce-linux-live-latest.iso-CHECKSUM' || \
+            { echo "::error::stable checksum missing from R2"; exit 1; }
+          rclone copyto "$prefix/xfce-linux-live-latest.iso" "$tmp/xfce-linux-live-latest.iso"
+          rclone copyto "$prefix/xfce-linux-live-latest.iso-CHECKSUM" "$tmp/checksum"
+          (cd "$tmp" && sha256sum -c checksum)
+          echo "Stable GHCR tags and R2 ISO/checksum verified for $SHA" >> "$GITHUB_STEP_SUMMARY"

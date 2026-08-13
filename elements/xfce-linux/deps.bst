@@ -14,6 +14,9 @@ depends:
   # ── XFCE Desktop Stack (from our monorepo) ─────────────
   - xfce-linux/xfce-linux-cluster.bst
 
+  # ── XFCE Opinionated Experience Layer (Aurora equivalent, xfce-linux#40) ─
+  - xfce-linux/experience-layer.bst
+
   # ── XFCE Session Configuration & Branding ──────────────
   - xfce-linux/session-config.bst
   # XFCE-logo Plymouth splash (shadows the parent layer's GNOME watermark)
