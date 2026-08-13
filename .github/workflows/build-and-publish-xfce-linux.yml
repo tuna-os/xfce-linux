@@ -2,7 +2,7 @@ name: Build xfce-linux
 
 # Single-runner fallback build (manual dispatch only — scheduled and push
 # builds run through build-multirunner.yml, which splits the build across
-# free runners). Useful with a self-hosted runner via ACTIONS_RUNNER_LABEL.
+# free runners).
 
 on:
   workflow_dispatch:
@@ -24,9 +24,8 @@ concurrency:
 
 jobs:
   build:
-    # Use a self-hosted runner if ACTIONS_RUNNER_LABEL repo variable is set,
-    # otherwise fall back to GitHub-hosted ubuntu-24.04.
-    runs-on: ${{ vars.ACTIONS_RUNNER_LABEL && format('runs-on={0}/runner={1}', github.run_id, vars.ACTIONS_RUNNER_LABEL) || 'ubuntu-24.04' }}
+    # Always a GitHub-hosted runner -- no third-party runner escape hatch.
+    runs-on: ubuntu-24.04
     timeout-minutes: 1440
     permissions:
       contents: read
