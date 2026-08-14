@@ -54,9 +54,13 @@ Heavy builds should run in CI, not on a laptop.
 - Renovate handles Actions/containers; `.bst` refs are bumped by
   `track-bst-sources.yml` (`bst source track`). Junction bumps
   (freedesktop-sdk, gnome-build-meta) are review-required.
-- Committed binary trees (`files/xfce-binaries/`, big filemaps —
-  issues #16/#17) are known debt from the xfwl4 bring-up; don't add
-  more. `xfwl4-headers/` was removed in the #15 cleanup — vendored
+- Committed binary trees and large generated filemaps (issues #16/#17)
+  were dropped from git in the repo-hygiene cleanup:
+  `files/xfce-binaries/` is now fetched by `xfce-binaries.bst` from a
+  pinned tarball, and `files/filemap.json` +
+  `files/fakecap-manifest.tsv` are generated at build time by
+  `scripts/gen-filemap.py`. Don't re-commit any of them.
+  `xfwl4-headers/` was removed in the #15 cleanup — vendored
   build-only headers that were never referenced by any .bst element.
 
 ## CI gate rules (hard-won)

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Menu>
-  <Name>Xfce</Name>
-  <Directory>xfce.apps.directory</Directory>
-  <Include>
-    <Filename>applications/</Filename>
-  </Include>
-</Menu>
