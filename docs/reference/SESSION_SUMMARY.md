@@ -338,7 +338,7 @@ A: OCI image + XFCE binaries ≈ 2-3GB; bootable disk image (sparse) ≈ 30GB no
 - BuildStream: https://buildstream.build/
 - freedesktop-sdk: https://freedesktop-sdk.io/
 - gnome-build-meta: https://gitlab.gnome.org/GNOME/gnome-build-meta/
-- XFCE Wayland: https://github.com/hanthor/xfce-wayland
+- XFCE Wayland: https://github.com/tuna-os/xfce-linux
 - Bootc: https://containers.github.io/bootc/
 
 ---
