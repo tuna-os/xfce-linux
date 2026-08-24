@@ -165,3 +165,59 @@ def test_top_level_command_failed_completes_active_job(dashboard, monkeypatch):
     assert dashboard.STATE.failures[0]["status"] == "failure"
     assert dashboard.STATE.completed[-1]["status"] == "failure"
 
+
+def test_failure_event_for_untracked_hash_is_ignored(dashboard):
+    # A FAILURE line for a hash never seen in a START event is a sub-event
+    # BST emits underneath the top-level job — it must not fabricate a
+    # completed/failure entry.
+    dashboard.parse_line(event("FAILURE", build_hash="never-started",
+                                message="Command failed"))
+
+    assert dashboard.STATE.completed == []
+    assert dashboard.STATE.failures == []
+    assert dashboard.STATE.failure_count == 0
+
+
+def test_live_failure_updates_existing_failure_summary_catchup_entry(
+    dashboard, monkeypatch
+):
+    # On catch-up, the Failure Summary block is parsed before the live START
+    # for the same element, leaving a hash-less placeholder in `failures`.
+    # A later live FAILURE event for that element must fill in the
+    # placeholder rather than appending a duplicate.
+    dashboard.parse_line("    kde-build-meta.bst:kde/plasma/kwin.bst:")
+    assert dashboard.STATE.failures == [
+        {"element": "kde/plasma/kwin.bst", "hash": "", "duration": 0,
+         "status": "failure", "log": ""}
+    ]
+
+    times = iter((100.0, 130.0, 130.0))
+    monkeypatch.setattr(dashboard.time, "time", lambda: next(times))
+    dashboard.parse_line(event("START", element="kde/plasma/kwin.bst",
+                                build_hash="deadbeef"))
+    dashboard.parse_line(event("FAILURE", element="kde/plasma/kwin.bst",
+                                build_hash="deadbeef", message="Command failed"))
+
+    assert len(dashboard.STATE.failures) == 1
+    assert dashboard.STATE.failures[0]["hash"] == "deadbeef"
+    assert dashboard.STATE.failures[0]["duration"] == 30
+    assert dashboard.STATE.failure_count == 1
+
+
+def test_pull_queue_summary_does_not_backfill_failure_count(dashboard):
+    # SUMMARY_QUEUE_RE matches both "Pull Queue:" and "Build Queue:" lines,
+    # but only a Build Queue failure count should ever backfill state.
+    dashboard.parse_line("  Pull Queue: processed 5, skipped 0, failed 9")
+
+    assert dashboard.STATE.failure_count == 0
+
+
+def test_summary_queue_backfill_skipped_when_failures_already_tracked(dashboard):
+    dashboard.STATE.failure_count = 2
+
+    dashboard.parse_line("  Build Queue: processed 8, skipped 2, failed 5")
+
+    # Live-tracked failures are authoritative; the summary count is only a
+    # fallback for failures that never produced a live FAILURE event.
+    assert dashboard.STATE.failure_count == 2
+
