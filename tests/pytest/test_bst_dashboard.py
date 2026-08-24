@@ -145,3 +145,23 @@ def test_deeply_indented_failure_output_is_not_recent_noise(dashboard):
 
     assert dashboard.STATE.recent_lines == []
 
+
+def test_top_level_command_failed_completes_active_job(dashboard, monkeypatch):
+    # BuildStream emits top-level failures as "FAILURE ... Command failed"
+    # with no .log path, so is_top is False for this line — but the job
+    # must still leave `active` and be counted as a failure. Regression
+    # test for the previously unreachable FAILURE branch (issue #108).
+    times = iter((100.0, 130.0, 130.0))
+    monkeypatch.setattr(dashboard.time, "time", lambda: next(times))
+
+    dashboard.parse_line(event("START"))
+    assert "abcdef" in dashboard.STATE.active
+
+    dashboard.parse_line(event("FAILURE", message="Command failed"))
+
+    assert dashboard.STATE.active == {}
+    assert dashboard.STATE.failure_count == 1
+    assert dashboard.STATE.failures[0]["hash"] == "abcdef"
+    assert dashboard.STATE.failures[0]["status"] == "failure"
+    assert dashboard.STATE.completed[-1]["status"] == "failure"
+

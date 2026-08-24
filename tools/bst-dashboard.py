@@ -642,53 +642,52 @@ def parse_line(raw: str):
         s.recent_lines.append(f"[{status:7s}] {short}  {msg}")
     STATE.update(_add_recent)
 
-    if action == "build" and is_top:
-        if status == "START":
-            # BST emits relative log paths like "gnome/pkg/hash-build.log"
-            # Full path on host: ~/.cache/buildstream/logs/<relative>
-            bst_logs = os.path.expanduser("~/.cache/buildstream/logs")
-            host_log = os.path.join(bst_logs, msg) if msg.endswith(".log") else ""
-            def _start(s, _log=host_log):
-                s.active[bst_hash] = {
-                    "element": short,
-                    "hash": bst_hash,
-                    "start": time.time(),
-                    "log": _log,
-                }
-            STATE.update(_start)
+    if action == "build" and is_top and status == "START":
+        # BST emits relative log paths like "gnome/pkg/hash-build.log"
+        # Full path on host: ~/.cache/buildstream/logs/<relative>
+        bst_logs = os.path.expanduser("~/.cache/buildstream/logs")
+        host_log = os.path.join(bst_logs, msg) if msg.endswith(".log") else ""
+        def _start(s, _log=host_log):
+            s.active[bst_hash] = {
+                "element": short,
+                "hash": bst_hash,
+                "start": time.time(),
+                "log": _log,
+            }
+        STATE.update(_start)
 
-        elif status == "SUCCESS":
-            def _done(s):
-                entry = s.active.pop(bst_hash, None)
-                dur = int(time.time() - entry["start"]) if entry else 0
-                s.completed.append({"element": short, "hash": bst_hash, "duration": dur, "status": "success"})
-                s.success_count += 1
-                s.build_end_ts = time.time()
-            STATE.update(_done)
+    elif action == "build" and is_top and status == "SUCCESS":
+        def _done(s):
+            entry = s.active.pop(bst_hash, None)
+            dur = int(time.time() - entry["start"]) if entry else 0
+            s.completed.append({"element": short, "hash": bst_hash, "duration": dur, "status": "success"})
+            s.success_count += 1
+            s.build_end_ts = time.time()
+        STATE.update(_done)
 
-        elif status == "FAILURE":
-            # BST top-level failure says "Command failed" (no log path), so don't
-            # require is_top — just check if this hash was actually being tracked.
-            def _fail(s):
-                entry = s.active.pop(bst_hash, None)
-                if entry is None:
-                    return  # sub-event failure we don't care about
-                dur = int(time.time() - entry["start"])
-                item = {"element": short, "hash": bst_hash, "duration": dur,
-                        "status": "failure", "log": entry.get("log", "")}
-                s.completed.append(item)
-                # Avoid duplicates from Failure Summary catch-up
-                if not any(f["hash"] == bst_hash for f in s.failures):
-                    # Update existing catch-up entry if present (same element, no hash)
-                    for f in s.failures:
-                        if f["element"] == short and not f["hash"]:
-                            f.update(item)
-                            break
-                    else:
-                        s.failures.append(item)
-                s.failure_count = len(s.failures)
-                s.build_end_ts = time.time()
-            STATE.update(_fail)
+    elif action == "build" and status == "FAILURE":
+        # BST top-level failure says "Command failed" (no log path), so don't
+        # require is_top — just check if this hash was actually being tracked.
+        def _fail(s):
+            entry = s.active.pop(bst_hash, None)
+            if entry is None:
+                return  # sub-event failure we don't care about
+            dur = int(time.time() - entry["start"])
+            item = {"element": short, "hash": bst_hash, "duration": dur,
+                    "status": "failure", "log": entry.get("log", "")}
+            s.completed.append(item)
+            # Avoid duplicates from Failure Summary catch-up
+            if not any(f["hash"] == bst_hash for f in s.failures):
+                # Update existing catch-up entry if present (same element, no hash)
+                for f in s.failures:
+                    if f["element"] == short and not f["hash"]:
+                        f.update(item)
+                        break
+                else:
+                    s.failures.append(item)
+            s.failure_count = len(s.failures)
+            s.build_end_ts = time.time()
+        STATE.update(_fail)
 
     elif action == "pull":
         if status == "SKIPPED" and "Pull" in msg:
