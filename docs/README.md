@@ -106,29 +106,17 @@ just logs               # View build logs
 - **Utilities:** xfce4-terminal, xfce4-appfinder, xfce4-about
 - **File Manager:** Thunar with plugins
 - **Settings:** xfce4-settings, xfce4-power-manager
-- **And 46 more applications...**
-
-### Panel Plugins (31 Available)
-- Clock, system monitor, weather, audio mixer, and more
-
-### Wayland Support
-- **Compositor:** xfwl4 (Wayland-native XFCE compositor)
-- **Session:** Wayland-compatible XFCE session
-
-## Build Status
-
-| Component | Status | Details |
+-| Component | Status | Details |
 |-----------|--------|---------|
-| Build | ✅ Complete | db9e454f artifact cached |
-| Elements | ✅ Verified | 1060/1060 resolved, 0 errors |
-| Boot | ✅ Tested | VM boots to login prompt |
-| Export | ⏳ Solvable | Documented solutions available |
+| Build | ✅ Complete | Multi-runner CI builds OCI image and publishes `latest` / `stable` |
+| Elements | ✅ Verified | 1060 elements resolved cleanly |
+| Boot | ✅ Tested | Live ISO and LUKS install test suite automated in GHA |
+| Export | ✅ Operational | Automated Dakota-style export and chunkification in CI |
 
 ### Build Metrics
-- **Total Time:** 88 minutes 45 seconds
-- **Elements:** 1060 (1060 successful, 0 failures)
-- **Cache Size:** 127GB (local) + remote
-- **Artifact:** db9e454f (OCI image, fully cached)
+- **Pipeline:** Automated GitHub Actions multi-runner workflow (`build-multirunner.yml`)
+- **Elements:** 1060 elements processed across parallel dependency chunks
+- **Artifacts:** Published to GHCR (`ghcr.io/tuna-os/xfce-linux`) and R2 live ISO storage
 
 ## Architecture
 
@@ -147,27 +135,9 @@ Boot Flow
 └── XFCE Session
 ```
 
-## Known Issues & Solutions
+## CI & Deployment Pipeline
 
-### 1. Bootc Composefs Install Path
-**Issue:** `bootc install` needs the exported image normalized before install
-
-**Root Cause:** BuildStream generates layered OCI output; Dakota-style chunkifying keeps the bootc path compatible with composefs-backed installs
-
-**Solutions:**
-1. Dakota-style chunkify after export (wired into `just build`)
-2. Use OSTree import directly
-3. Use containers-storage approach
-
-### 2. Artifact Export Dependency Resolution
-**Issue:** `bst artifact checkout` fails with "No artifacts to stage"
-
-**Root Cause:** Compose elements require all dependencies fully cached locally
-
-**Solutions:**
-1. Complete full rebuild cycle
-2. Use BuildStream local service (`bst-service`)
-3. Manual cache population from remotes
+See [ci-and-iso-pipeline.md](ci-and-iso-pipeline.md) for full pipeline details, release channel promotion, and troubleshooting history.
 
 ## Development
 
@@ -188,10 +158,11 @@ Boot Flow
 
 ## Documentation
 
-- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** — Current project state and progress
-- **[technical/BUILD_METRICS.md](technical/BUILD_METRICS.md)** — Build statistics and performance
-- **[technical/BOOT_TESTING.md](technical/BOOT_TESTING.md)** — Testing methodology and results
-- **[technical/SOLUTIONS_AND_ANALYSIS.md](technical/SOLUTIONS_AND_ANALYSIS.md)** — 5 export solutions with analysis
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** — Current project state and status
+- **[ci-and-iso-pipeline.md](ci-and-iso-pipeline.md)** — CI/CD architecture and release pipeline
+- **[technical/BUILD_METRICS.md](technical/BUILD_METRICS.md)** — Historical build statistics
+- **[technical/BOOT_TESTING.md](technical/BOOT_TESTING.md)** — Testing methodology details
+- **[technical/SOLUTIONS_AND_ANALYSIS.md](technical/SOLUTIONS_AND_ANALYSIS.md)** — Export analysis notes
 
 ## License
 
@@ -206,15 +177,15 @@ See individual components for specific license details.
 ## Contributing
 
 1. Review [PROJECT_STATUS.md](PROJECT_STATUS.md) for current state
-2. Check [technical/SOLUTIONS_AND_ANALYSIS.md](technical/SOLUTIONS_AND_ANALYSIS.md) for known issues
+2. Check [ci-and-iso-pipeline.md](ci-and-iso-pipeline.md) for CI details
 3. Test changes with `just build && just boot-vm`
-4. Document changes in appropriate docs/technical/*.md file
+4. Document changes in appropriate docs/ markdown file
 
 ## Support
 
 - **Build Issues:** Check BuildStream logs in `~/.cache/buildstream/logs/`
 - **Boot Issues:** Use serial console: `telnet 127.0.0.1 4444`
-- **Technical Details:** See docs/technical/*.md files
+- **CI Pipeline:** See docs/ci-and-iso-pipeline.md
 
 ## Project Timeline
 
@@ -222,6 +193,17 @@ See individual components for specific license details.
 |-------|--------|-----------|
 | Element Validation | ✅ Complete | 100% |
 | Monorepo Integration | ✅ Complete | 100% |
+| OCI Build | ✅ Complete | 100% |
+| Boot Testing | ✅ Complete | 100% |
+| Export Pipeline | ✅ Complete | 100% |
+| Production Deployment | ✅ Operational | 100% |
+
+**Overall:** Operational
+
+---
+
+**Status:** Operational (Nightly and Stable release channels active)  
+**Maintainer:** See git historypo Integration | ✅ Complete | 100% |
 | OCI Build | ✅ Complete | 100% |
 | Boot Testing | ✅ Complete | 70% |
 | Export Pipeline | ⏳ In Progress | 60% |

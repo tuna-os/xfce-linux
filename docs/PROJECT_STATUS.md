@@ -1,8 +1,6 @@
 # XFCE Linux — Project Status
 
-**Status:** ✅ **70% COMPLETE** — Build verified, system boots successfully
-
-**Last Updated:** 2026-05-06 16:35 IST
+**Status:** ✅ **OPERATIONAL** — Automated builds, live ISO publishing, and LUKS integration testing active
 
 ---
 
@@ -10,59 +8,26 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Build Time** | 88m 45s |
+| **CI Engine** | GitHub Actions (`build-multirunner.yml`, `build-iso.yml`) |
 | **Elements** | 1060/1060 (100%) |
-| **Build Errors** | 0 |
+| **Release Channels** | Nightly (`latest`), Stable (`stable`) |
 | **XFCE Apps** | 55 binaries |
 | **XFCE Plugins** | 31 components |
-| **Boot Status** | ✅ Login prompt reached |
+| **Boot & Install Gate** | ✅ Automated via `test-luks-install.yml` |
 | **Infrastructure** | ✅ Operational |
 
 ---
 
-## 🎯 Project Phases
+## 🎯 Project Status & Pipeline
 
-### ✅ Completed Phases
+All build, export, and release phases are operationalized in GitHub Actions:
 
-**Phase 1: Element Validation** (100%)
-- All 1060 BuildStream elements load cleanly
-- Dependencies resolved without errors
-- freedesktop-sdk and gnome-build-meta integrated
+- **OCI Image Builds:** Parallel multi-runner chunk builds on GHA via BuildStream (`build-multirunner.yml`).
+- **Live ISO Pipeline:** Automated systemd-boot UEFI live ISO assembly pushed to R2 storage (`build-iso.yml`).
+- **End-to-End Testing:** Automated LUKS install and screenshot verification in QEMU VM.
+- **Stable Promotion:** Release promotion workflow (`promote-stable.yml`) verifies green CI checks before updating the `:stable` channel tag and R2 release assets.
 
-**Phase 2: Monorepo Integration** (100%)
-- 55 XFCE applications included
-- 31 panel plugins integrated
-- All dependencies properly cached
-
-**Phase 3a: OCI Build** (100%)
-- Image built successfully (db9e454f)
-- 1060 elements processed
-- Zero build errors
-- Artifact cached in BuildStream CAS (100GB)
-
-**Phase 3c: Boot Testing** (70%)
-- VM boots successfully in QEMU
-- Serial console responsive
-- Display manager (GDM) operational
-- Login prompt accessible
-
-### ⏳ In-Progress Phases
-
-**Phase 3b: Export Pipeline** (60%)
-- **Status:** Export process blocked by dependency resolution
-- **Root Cause:** Compose elements require all deps cached locally
-- **Solution:** Available and documented (see technical/SOLUTIONS_AND_ANALYSIS.md)
-- **Effort:** 1-2 hours
-
-**Phase 4: Bootable Image** (80%)
-- Test image created and bootable
-- Alternative boot paths documented
-- Production bootable disk awaiting export fix
-
-**Phase 5: Production Deployment** (0%)
-- Ready to start after export fix
-- Full system validation pending
-- Desktop environment verification pending
+For detailed pipeline configuration and troubleshooting logs, see [ci-and-iso-pipeline.md](ci-and-iso-pipeline.md).
 
 ---
 
@@ -181,21 +146,18 @@ See `docs/` directory:
 
 - **docs/README.md** — Main project guide
 - **docs/PROJECT_STATUS.md** — This file
+- **docs/ci-and-iso-pipeline.md** — CI/CD architecture and pipeline troubleshooting
 - **docs/technical/BUILD_METRICS.md** — Build statistics
 - **docs/technical/BOOT_TESTING.md** — Testing details
-- **docs/technical/SOLUTIONS_AND_ANALYSIS.md** — 5 solutions (recommended)
-- **docs/reference/** — Development notes & archived reports
+- **docs/technical/SOLUTIONS_AND_ANALYSIS.md** — Export analysis reference
 
 ---
 
-## 🎓 For Next Developer
+## 🎓 For Developers & Contributors
 
-1. **Read First:** docs/technical/SOLUTIONS_AND_ANALYSIS.md
-2. **Build Status:** See BUILD_METRICS.md
-3. **Testing:** See BOOT_TESTING.md
-4. **Start:** Run `just build` or `just export` depending on phase
-
-**Confidence Level:** 🟢🟢🟢🟢 (Very High)
+1. **Read First:** [ci-and-iso-pipeline.md](ci-and-iso-pipeline.md)
+2. **Build & Test Locally:** Run `just build && just boot-vm`
+3. **CI Workflows:** `.github/workflows/build-multirunner.yml`, `build-iso.yml`, `test-luks-install.yml`
 
 ---
 
@@ -208,17 +170,16 @@ gnome-build-meta (gnome-50)
     ↓
 xfce-wayland monorepo (55 apps, 31 plugins)
     ↓
-XFCE Linux OCI Image (db9e454f)
+XFCE Linux OCI Image
     ├─ Platform Layer
     ├─ Runtime Layer
     ├─ Application Layer
     └─ Configuration Layer
     ↓
-Bootable VM (QEMU + UEFI)
+Bootable Live ISO / QEMU VM
 ```
 
 ---
 
-**Project Status:** ✅ **Production-Ready** (awaiting export fix)  
-**Completion:** 70% (up from 65% at session start)  
-**Confidence:** Very High (🟢🟢🟢🟢)
+**Project Status:** ✅ **Operational**  
+**Release Channels:** Nightly (`latest`), Stable (`stable`)
