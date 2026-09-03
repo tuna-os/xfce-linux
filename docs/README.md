@@ -213,7 +213,10 @@ See individual components for specific license details.
 ## Support
 
 - **Build Issues:** Check BuildStream logs in `~/.cache/buildstream/logs/`
-- **Boot Issues:** Use serial console: `telnet 127.0.0.1 4444`
+- **Boot Issues:** Use the serial console: `telnet 127.0.0.1 4445` (ttyS0) or
+  `telnet 127.0.0.1 4447` (ttyS1 debug shell). These apply to the native QEMU
+  path of `just boot-vm`; see
+  [CONTRIBUTING.md](../CONTRIBUTING.md#boot-testing) for the Podman fallback.
 - **Technical Details:** See docs/technical/*.md files
 
 ## Project Timeline
