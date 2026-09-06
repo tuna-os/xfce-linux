@@ -1,3 +1,4 @@
+<!-- ste-disable-file: this dated report preserves the historical session record and its diagnostic wording -->
 # XFCE Linux BuildStream Project — Session Wrap-Up
 
 **Date**: 2026-05-05  

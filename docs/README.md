@@ -1,13 +1,14 @@
 # XFCE Linux — BuildStream OCI Image
 
-A production-ready XFCE desktop Linux distribution built with BuildStream, freedesktop-sdk 25.08, and gnome-build-meta infrastructure.
+A distribution of XFCE Linux for production, built with BuildStream,
+freedesktop-sdk 25.08, and infrastructure from gnome-build-meta.
 
 ## Quick Start
 
 ### Prerequisites
 - BuildStream 2.7.0+ (via `bst2` container)
 - Podman or Docker
-- QEMU + KVM for testing
+- QEMU + KVM to run tests
 - 200GB+ free disk space (cache)
 - 16GB+ RAM recommended
 
@@ -152,7 +153,8 @@ Boot Flow
 ### 1. Bootc Composefs Install Path
 **Issue:** `bootc install` needs the exported image normalized before install
 
-**Root Cause:** BuildStream generates layered OCI output; Dakota-style chunkifying keeps the bootc path compatible with composefs-backed installs
+**Root Cause:** BuildStream creates OCI output with layers. Dakota-style
+chunkify keeps the bootc path compatible with installs backed by composefs.
 
 **Solutions:**
 1. Dakota-style chunkify after export (wired into `just build`)
@@ -162,10 +164,10 @@ Boot Flow
 ### 2. Artifact Export Dependency Resolution
 **Issue:** `bst artifact checkout` fails with "No artifacts to stage"
 
-**Root Cause:** Compose elements require all dependencies fully cached locally
+**Root Cause:** Compose elements need all dependencies in the local cache.
 
 **Solutions:**
-1. Complete full rebuild cycle
+1. Run a complete rebuild
 2. Use BuildStream local service (`bst-service`)
 3. Manual cache population from remotes
 
@@ -190,7 +192,7 @@ Boot Flow
 
 - **[PROJECT_STATUS.md](PROJECT_STATUS.md)** — Current project state and progress
 - **[technical/BUILD_METRICS.md](technical/BUILD_METRICS.md)** — Build statistics and performance
-- **[technical/BOOT_TESTING.md](technical/BOOT_TESTING.md)** — Testing methodology and results
+- **[technical/BOOT_TESTING.md](technical/BOOT_TESTING.md)** — Test methods and results
 - **[technical/SOLUTIONS_AND_ANALYSIS.md](technical/SOLUTIONS_AND_ANALYSIS.md)** — 5 export solutions with analysis
 
 ## License
@@ -232,5 +234,5 @@ See individual components for specific license details.
 ---
 
 **Last Updated:** 2026-05-06  
-**Status:** Production-Ready (Awaiting export fix)  
+**Status:** Production-Ready (export fix remains)
 **Maintainer:** See git history

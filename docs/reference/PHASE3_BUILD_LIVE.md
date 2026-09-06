@@ -1,3 +1,4 @@
+<!-- ste-disable-file: this dated report preserves the historical session record and its diagnostic wording -->
 # Phase 3: OCI Build & Test — Live Build Report
 
 **Date**: 2026-05-05  
