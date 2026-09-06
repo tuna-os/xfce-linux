@@ -111,6 +111,15 @@ jobs:
       # budget timeout is tolerated — a real build error still fails core.
       core_budget_minutes: "300"
       soft_core_budget: true
+      # Chunks are checkpoints too: their partial CAS is salvaged to the
+      # :latest cache tag on every run, and the next run resumes from it. Without
+      # this, one chunk hitting its 270m budget (exit 124) is a hard failure,
+      # build_final's `!contains(needs.*.result, 'failure')` gate skips it, and
+      # nothing is ever pushed — which is how :latest went missing (#131, #135;
+      # run 33935440504 lost chunks 0/1/2/8/9 to the budget alone). A real build
+      # error still fails the chunk, and build_final still has to build the
+      # target to completion before anything is published.
+      soft_chunk_budget: true
 
   # ── Phase 4: Final assembly + push ──────────────────────────────────
   build_final:

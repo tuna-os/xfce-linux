@@ -9,9 +9,19 @@ description: |
   separate follow-up, once this survives the LUKS e2e's login-path assertions
   per the issue's own phased plan.
 
+# buildsystem-make brings the C toolchain (gcc/binutils) into the build
+# sandbox. rustc drives linking through clang, and without binutils' `ld`
+# every crate's build script dies with "clang: error: unable to execute
+# command: posix_spawn failed: No such file or directory" — the reason this
+# element failed on every Multi-Runner run since it landed (#135). Same
+# dependency shape as every cargo element in tuna-os/tromso.
+build-depends:
+- freedesktop-sdk.bst:public-stacks/buildsystem-make.bst
+- freedesktop-sdk.bst:components/pkg-config.bst
+- freedesktop-sdk.bst:components/rust.bst
+
 depends:
 - freedesktop-sdk.bst:public-stacks/runtime-minimal.bst
-- freedesktop-sdk.bst:components/rust.bst
 - freedesktop-sdk.bst:components/linux-pam.bst
 - freedesktop-sdk.bst:components/linux-pam-base.bst
 - freedesktop-sdk.bst:components/systemd.bst
