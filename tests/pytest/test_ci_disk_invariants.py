@@ -84,3 +84,20 @@ def test_disk_is_logged_around_each_merge():
     assert BUILD_FINAL.count("df -h /") >= 3, (
         "log free space around the CAS merge and the export"
     )
+
+
+STALENESS = (REPO / ".github/workflows/staleness-check.yml").read_text()
+
+
+def test_staleness_check_queries_the_real_build_workflow_name():
+    """The check greps `gh run list --workflow "<name>"`. If that string stops
+    matching the build workflow's `name:` — a rename, a typo, a copy from a
+    sibling repo — the query returns nothing, the check reads that as "no
+    successful run", and it opens a stale-build issue every single day while
+    the pipeline is perfectly healthy. Both halves must name the same
+    workflow."""
+    build_name = re.search(r"^name:\s*(.+)$", MULTIRUNNER, re.M).group(1).strip()
+    assert f'--workflow "{build_name}"' in STALENESS, (
+        f"staleness-check.yml does not query the build workflow's real name "
+        f"({build_name!r})"
+    )
