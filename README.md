@@ -43,16 +43,19 @@ ready. Thus, downstream download pages can safely use those stable names.
 
 ## Verifying Signatures
 
-GitHub Actions uses [cosign](https://github.com/sigstore/cosign) and OIDC
-(Sigstore/Fulcio) to sign OCI images and live ISOs without a key. There is no
-long-lived key to leak or replace.
+GitHub Actions signs OCI images with [cosign](https://github.com/sigstore/cosign)
+and a project key. The public half is `cosign.pub` in this repository and is
+baked into the image at `/usr/share/pki/containers/xfce-linux.pub`, which is
+where `bootc` reads it from — see [`docs/signing.md`](docs/signing.md).
+
+A key rather than keyless, because `bootc` verifies through
+containers-policy(5), whose `sigstoreSigned` type takes a public key path and
+cannot express a Fulcio certificate identity.
 
 **OCI images:**
 
 ```bash
-cosign verify ghcr.io/tuna-os/xfce-linux:latest \
-  --certificate-identity-regexp 'https://github.com/tuna-os/xfce-linux/\.github/workflows/build-multirunner\.yml@.*' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+cosign verify --key cosign.pub ghcr.io/tuna-os/xfce-linux:latest
 ```
 
 **Live ISO signatures** (`.sig` and `.cert` files accompany each dated ISO,

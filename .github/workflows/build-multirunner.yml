@@ -3,9 +3,8 @@ name: Build xfce-linux (Multi-Runner)
 # Planning + core + parallel dependency chunks are a shared reusable
 # workflow (tuna-os/bst-ci) — identical across every BuildStream desktop
 # repo except image name/target/chunk count. build_final (export, sign,
-# push) stays here: cosign's keyless signing embeds *this* workflow's
-# identity in the Fulcio certificate, which is what README.md's verify
-# instructions point at.
+# push) stays here: it owns the signing key and the GHCR push, and
+# README.md's verify instructions point at the public key it signs with.
 
 on:
   # No push trigger: this build takes hours and we don't need a fresh run
@@ -132,7 +131,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write # cosign keyless signing (Sigstore/Fulcio OIDC)
       security-events: write # Trivy SARIF upload
     steps:
       - name: Free disk space
@@ -288,11 +286,36 @@ jobs:
         if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/stable') && inputs.push_image != false }}
         uses: sigstore/cosign-installer@v4.1.2
 
-      - name: Sign image (cosign keyless)
-        if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/stable') && inputs.push_image != false }}
+      # Signed with a key, not keyless. bootc verifies images through
+      # containers-policy(5), whose `sigstoreSigned` type takes a public key
+      # baked into the image (`keyPath`); it has no way to express a Fulcio
+      # certificate identity, so a keyless signature is unverifiable by the
+      # thing that actually consumes this image. Same shape as
+      # zirconium-dev/zirconium-hawaii, which signs with `SIGNING_SECRET` and
+      # ships the public half at /usr/share/pki/containers/.
+      #
+      # Signs the digest once rather than each tag: every tag pushed above
+      # resolves to this digest, and cosign stores the signature against the
+      # digest either way.
+      #
+      # Gated on the secret existing so a fork or a repo without the key
+      # still builds and publishes; the step reports skipped instead of
+      # failing. Remove the guard once the key is in place permanently.
+      - name: Sign image (cosign, key)
+        if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/stable') && inputs.push_image != false && env.COSIGN_PRIVATE_KEY != '' }}
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+          COSIGN_PASSWORD: ${{ secrets.SIGNING_SECRET_PASSWORD }}
         run: |
-          cosign sign --yes \
+          cosign sign -y --key env://COSIGN_PRIVATE_KEY \
             "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+
+      - name: Warn when the image went out unsigned
+        if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/stable') && inputs.push_image != false && env.COSIGN_PRIVATE_KEY == '' }}
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          echo "::warning::SIGNING_SECRET is not set — published an unsigned image. See docs/signing.md."
 
       - name: Trivy image scan
         if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/stable') && inputs.push_image != false }}
