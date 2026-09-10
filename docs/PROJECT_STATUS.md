@@ -108,7 +108,9 @@ OCI Image: db9e454f
 ## 🚀 Next Steps
 
 ### Immediate (30 minutes)
-1. Verify XFCE installation: `dpkg -l | grep -i xfce`
+1. Verify the XFCE library tree: `ls -la /usr/lib/xfce4/` — the guest is a
+   from-source freedesktop-sdk image with no dpkg database, so package-manager
+   queries do not apply
 2. Confirm all apps present: `ls /usr/bin | grep -E 'xfce|xf'`
 3. Check display manager: `systemctl status gdm`
 
