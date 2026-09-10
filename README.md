@@ -43,14 +43,14 @@ ready. Thus, downstream download pages can safely use those stable names.
 
 ## Verifying Signatures
 
-GitHub Actions signs OCI images with [cosign](https://github.com/sigstore/cosign)
-and a project key. The public half is `cosign.pub` in this repository and is
-baked into the image at `/usr/share/pki/containers/xfce-linux.pub`, which is
-where `bootc` reads it from — see [`docs/signing.md`](docs/signing.md).
+CI signs each OCI image with [cosign](https://github.com/sigstore/cosign) and
+a project key. The public half is `cosign.pub` in this repository. The build
+copies it into the image at `/usr/share/pki/containers/xfce-linux.pub`, where
+`bootc` reads it. See [`docs/signing.md`](docs/signing.md).
 
-A key rather than keyless, because `bootc` verifies through
-containers-policy(5), whose `sigstoreSigned` type takes a public key path and
-cannot express a Fulcio certificate identity.
+The project uses a key, not a keyless signature, because `bootc` verifies
+through containers-policy(5). That policy type takes a path to a public key
+and cannot express a Fulcio certificate identity.
 
 **OCI images:**
 
