@@ -69,9 +69,24 @@ export:
         SUDO_CMD="sudo"
     fi
 
-    echo "==> Exporting OCI image..."
-    rm -rf .build-out
-    just bst artifact checkout oci/{{image_name}}.bst --directory /src/.build-out
+    # CI checks the artifact out in its own step and then deletes the CAS
+    # before calling this recipe, because the ~100 GB cache and the squashed
+    # image do not fit on a GitHub runner together (#159). With
+    # EXPORT_REUSE_CHECKOUT=1, .build-out is already the artifact and must not
+    # be re-requested from BuildStream — by then the cache it would read is
+    # gone. Unset, the default, keeps the original one-command behaviour for
+    # local use.
+    if [ "${EXPORT_REUSE_CHECKOUT:-0}" = "1" ]; then
+        if [ ! -d .build-out ]; then
+            echo "ERROR: EXPORT_REUSE_CHECKOUT=1 but .build-out is missing" >&2
+            exit 1
+        fi
+        echo "==> Reusing the existing .build-out checkout..."
+    else
+        echo "==> Exporting OCI image..."
+        rm -rf .build-out
+        just bst artifact checkout oci/{{image_name}}.bst --directory /src/.build-out
+    fi
 
     # Load the multi-layer OCI image and squash into a single layer.
     echo "==> Loading and squashing OCI image..."
