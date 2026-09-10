@@ -56,13 +56,13 @@ jobs:
         if: steps.changed.outputs.elements != ''
         run: |
           echo "$GITHUB_TOKEN" | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-          mkdir -p ~/.cache/buildstream
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          if oras pull "ghcr.io/${REPO_LOWER}/cache-${IMAGE_NAME}-core:latest" -o .; then
-            zstd -d -T0 cas-core.tar.zst -o cas-core.tar
-            tar -xf cas-core.tar -C "$HOME/.cache/buildstream"
-            rm -f cas-core.tar cas-core.tar.zst
-          fi
+          # Streamed rather than pulled: the old form staged both
+          # cas-core.tar.zst and the decompressed cas-core.tar on disk
+          # alongside the cache, three copies of a 13.7 GB artifact (#159).
+          scripts/cas-restore-stream.sh \
+            "ghcr.io/${REPO_LOWER}/cache-${IMAGE_NAME}-core:latest" \
+            || echo "::warning::core CAS unavailable — building from scratch"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

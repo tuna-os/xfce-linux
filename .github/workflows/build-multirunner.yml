@@ -162,32 +162,35 @@ jobs:
         run: |
           mkdir -p ~/.cache/buildstream
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          BASE="ghcr.io/${REPO_LOWER}/cache-${IMAGE_NAME}"
 
-          if oras pull "ghcr.io/${REPO_LOWER}/cache-${IMAGE_NAME}-core:latest" -o .; then
-            if [ -f cas-core.tar.zst ]; then
-              zstd -d -c -T0 cas-core.tar.zst | tar -xf - -C "$HOME/.cache/buildstream"
-              rm -f cas-core.tar.zst
-            fi
-          fi
+          # Streamed, never staged: `oras pull -o .` wrote each tarball (up to
+          # 28 GB compressed, ~266 GB across core + ten chunks on 2026-09-10) to
+          # the runner disk before extracting it, right next to the cache it was
+          # unpacking into. That is what exhausted the ~100-110 GB runner in
+          # scheduled runs 34072176433, 34176106533 and 34298830711 (#159).
+          # scripts/cas-restore-stream.sh pipes the blob through zstd and tar
+          # so the compressed bytes never land.
+          scripts/cas-restore-stream.sh "${BASE}-core:latest" \
+            || echo "::warning::core CAS unavailable — build_final rebuilds it"
+          df -h /; du -sh ~/.cache/buildstream
 
+          # A missing chunk costs rebuild time in build_final, never
+          # correctness, so a failed restore warns and carries on.
           echo "$MATRIX_KEYS" | jq -r '.[]' | while read -r chunk; do
             CACHE_KEY=$(echo "$CACHE_KEYS" | jq -r --arg c "$chunk" '.[$c] // empty')
-            PULLED=false
-            if [ -n "$CACHE_KEY" ]; then
-              if oras pull "ghcr.io/${REPO_LOWER}/cache-${IMAGE_NAME}-${chunk}:${CACHE_KEY}" -o .; then
-                PULLED=true
-              fi
+            restored=false
+            if [ -n "$CACHE_KEY" ] \
+               && scripts/cas-restore-stream.sh "${BASE}-${chunk}:${CACHE_KEY}"; then
+              restored=true
+            elif scripts/cas-restore-stream.sh "${BASE}-${chunk}:latest"; then
+              restored=true
             fi
-            if [ "$PULLED" = "false" ]; then
-              oras pull "ghcr.io/${REPO_LOWER}/cache-${IMAGE_NAME}-${chunk}:latest" -o . || continue
+            if [ "$restored" = "false" ]; then
+              echo "::warning::no CAS for ${chunk} — build_final rebuilds it"
             fi
-            TARBALL="cas-${chunk}.tar.zst"
-            if [ -f "$TARBALL" ]; then
-              zstd -d -c -T0 "$TARBALL" | tar -xf - -C "$HOME/.cache/buildstream"
-              rm -f "$TARBALL"
-            fi
+            df -h /; du -sh ~/.cache/buildstream
           done
-          du -sh ~/.cache/buildstream
 
       - name: Build Final Target
         env:
@@ -195,6 +198,28 @@ jobs:
         run: |
           mkdir -p logs
           timeout 300m just bst --log-file /src/logs/build-final.log build ${{ needs.multirunner.outputs.final_target }}
+
+      - name: Check out the artifact and free the CAS
+        env:
+          BST_FLAGS: --no-interactive --config /src/buildstream-ci.conf
+        run: |
+          # The merged CAS and the exported image do not fit on one runner
+          # together. Run 34298830711 proves the build itself is fine — it
+          # succeeded in 18 minutes — and then the runner died in "Export OCI
+          # image" with its own "No space left on device" (#159). So take the
+          # artifact out of the cache first, then drop the cache: everything
+          # after this point works from .build-out and podman storage.
+          df -h /
+          rm -rf .build-out
+          just bst artifact checkout \
+            "${{ needs.multirunner.outputs.final_target }}" --directory /src/.build-out
+          du -sh .build-out
+          # Removed inside the bst container: the cache tree is written by
+          # that container's root, so a host-side rm can hit permission
+          # errors depending on the podman mapping.
+          podman run --rm -v "${HOME}/.cache/buildstream:/cache:rw" "$BST2_IMAGE" \
+            sh -c 'rm -rf /cache/cas /cache/artifacts /cache/sources'
+          df -h /
 
       - name: Capture build timestamp
         id: timestamp
@@ -208,6 +233,8 @@ jobs:
           OCI_IMAGE_REVISION: ${{ github.sha }}
           OCI_IMAGE_VERSION: latest
           OCI_IMAGE_CREATED: ${{ steps.timestamp.outputs.created }}
+          # The CAS is gone by now (previous step); .build-out is the artifact.
+          EXPORT_REUSE_CHECKOUT: '1'
         run: |
           just export
           echo "image_ref=${{ env.IMAGE_NAME }}:latest" >> "$GITHUB_OUTPUT"
