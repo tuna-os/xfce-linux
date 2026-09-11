@@ -26,7 +26,6 @@ depends:
 
   - freedesktop-sdk.bst:public-stacks/runtime-minimal.bst
   - freedesktop-sdk.bst:components/gtk3.bst
-  - gnome-build-meta.bst:sdk/gtk.bst
   - freedesktop-sdk.bst:components/glib.bst
   
   # Wayland
