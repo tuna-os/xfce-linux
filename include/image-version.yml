@@ -1,0 +1,6 @@
+# Local defaults — updated in CI or via `just generate-image-version`
+branch: 'main'
+image-version: 'l.1'
+filesystem-time: 1321009871
+commit: 'unknown'
+commit-date-pretty: 'unknown'

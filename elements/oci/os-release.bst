@@ -12,10 +12,17 @@ config:
   install-commands:
     - |
       mkdir -p "%{install-root}/usr/lib"
-      cp os-release "%{install-root}/usr/lib/os-release"
+      sed \
+        -e 's/^VERSION_ID=.*/VERSION_ID="%{image-version}"/' \
+        -e 's/^IMAGE_VERSION=.*/IMAGE_VERSION="%{image-version}"/' \
+        -e 's/^VERSION=.*/VERSION="%{image-version}"/' \
+        os-release > "%{install-root}/usr/lib/os-release"
 
 variables:
   strip-binaries: ""
+  VERSION_ID: "%{image-version}"
+  IMAGE_VERSION: "%{image-version}"
+
 
 
 
