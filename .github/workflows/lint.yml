@@ -27,7 +27,7 @@ concurrency:
 jobs:
   shellcheck:
     name: shellcheck
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -46,7 +46,7 @@ jobs:
 
   yamllint:
     name: yamllint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -64,7 +64,7 @@ jobs:
 
   actionlint:
     name: actionlint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Run actionlint on workflows
@@ -74,7 +74,7 @@ jobs:
 
   renovate-config:
     name: Renovate Config Validate
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Validate renovate.json
@@ -82,7 +82,7 @@ jobs:
 
   lint-bst:
     name: lint .bst files
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
