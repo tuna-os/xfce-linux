@@ -18,7 +18,7 @@ concurrency:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -67,7 +67,7 @@ jobs:
 
   bst-graph:
     name: BuildStream Graph
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     container:
       image: registry.gitlab.com/freedesktop-sdk/infrastructure/freedesktop-sdk-docker-images/bst2:64eb0b4930d57a92710822898fb73af6cc1ae35d
       # BuildStream's CAS stager needs a real FUSE device; a plain container
@@ -82,7 +82,7 @@ jobs:
 
   just-parse:
     name: Just Parse
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: extractions/setup-just@v4
