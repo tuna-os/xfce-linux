@@ -17,6 +17,7 @@ on:
       - 'xfce-linux/**'
       - 'Justfile'
       - 'iso.justfile'
+      - 'just/**'
       - 'scripts/luks-install-qemu.sh'
       - 'scripts/fisherman-install.sh'
       - '.github/workflows/test-luks-install.yml'
