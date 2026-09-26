@@ -64,3 +64,22 @@ def test_track_sources_workflow():
     assert "Refresh tags in BST source mirrors" in content
     assert "Detect ref regressions" in content
     assert "Capture pre-track refs" in content
+
+
+def test_project_conf_does_not_pin_branch():
+    """project.conf must not set branch itself: the including file wins, so a
+    value there would hide the branch generate-image-version writes."""
+    content = (REPO / "project.conf").read_text()
+    assert re.search(r"^\s+branch:", content, re.MULTILINE) is None
+
+
+def test_image_builds_stamp_image_version():
+    """Every workflow that builds the published image must regenerate
+    include/image-version.yml first, or os-release ships the l.1 placeholder."""
+    for name in ("build-multirunner.yml", "build-and-publish-xfce-linux.yml"):
+        content = (REPO / ".github" / "workflows" / name).read_text()
+        stamp = content.find("just generate-image-version")
+        build = content.find("just bst ")
+        assert stamp != -1, f"{name} never runs generate-image-version"
+        assert stamp < build, f"{name} stamps the version after building"
+        assert "OCI_IMAGE_VERSION: ${{ steps.version.outputs.version }}" in content

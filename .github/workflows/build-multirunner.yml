@@ -190,6 +190,20 @@ jobs:
             df -h /; du -sh ~/.cache/buildstream
           done
 
+      - name: Stamp image version
+        id: version
+        # include/image-version.yml only carries placeholder defaults (l.1).
+        # Regenerate it from the commit date so os-release reports a real
+        # VERSION_ID, as zirconium's build does (#165).
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          just generate-image-version "$REF_NAME"
+          cat include/image-version.yml
+          version=$(sed -n "s/^image-version: '%{branch}\.\(.*\)'$/\1/p" include/image-version.yml)
+          test -n "$version"
+          echo "version=${REF_NAME}.${version}" >> "$GITHUB_OUTPUT"
+
       - name: Build Final Target
         env:
           BST_FLAGS: --no-interactive --config /src/buildstream-ci.conf
@@ -229,7 +243,7 @@ jobs:
           BST_FLAGS: --no-interactive --config /src/buildstream-ci.conf
           BUILD_IMAGE_NAME: ${{ env.IMAGE_NAME }}
           OCI_IMAGE_REVISION: ${{ github.sha }}
-          OCI_IMAGE_VERSION: latest
+          OCI_IMAGE_VERSION: ${{ steps.version.outputs.version }}
           OCI_IMAGE_CREATED: ${{ steps.timestamp.outputs.created }}
           # The CAS is gone by now (previous step); .build-out is the artifact.
           EXPORT_REUSE_CHECKOUT: '1'
