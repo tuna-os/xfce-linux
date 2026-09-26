@@ -9,7 +9,7 @@ description: >-
 
 sources:
 - kind: remote
-  url: https://gitlab.xfce.org/xfce/libxfce4ui/-/raw/8347316a5b01ce0d561aa4e236b4d73d564e2b0e/icons/scalable/xfce4-logo.svg
+  url: xfce_files:xfce/libxfce4ui/-/raw/8347316a5b01ce0d561aa4e236b4d73d564e2b0e/icons/scalable/xfce4-logo.svg
   ref: 0307d47afcb70d62ba6af6285a0023a96f692015a9ad4887c7e472d7b4166257
 
 build-depends:

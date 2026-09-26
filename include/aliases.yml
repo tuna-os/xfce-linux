@@ -60,6 +60,7 @@ aliases:
   thekelleys: http://www.thekelleys.org.uk/
   videolan_pub: https://download.videolan.org/pub/
   webkitgtk: https://webkitgtk.org/releases/
+  xfce_files: https://gitlab.xfce.org/
   ziglang: https://ziglang.org/
 
 
@@ -80,3 +81,4 @@ aliases:
   postmarketos: https://gitlab.postmarketos.org/
   samba: https://git.samba.org/
   savannah: https://git.savannah.gnu.org/git/
+  sourcehut: https://git.sr.ht/

@@ -28,11 +28,12 @@ depends:
 
 sources:
 - kind: git_repo
-  url: https://git.sr.ht/~kennylevinsen/greetd
+  url: sourcehut:~kennylevinsen/greetd
   track: "0.9.0"
   ref: 0.9.0-0-gf3f32498851c6775a9d9ca0d46239b9a6de78204
   directory: greetd
 - kind: cargo2
+  url: crates:crates
   cargo-lock: greetd/Cargo.lock
   ref:
   - kind: registry

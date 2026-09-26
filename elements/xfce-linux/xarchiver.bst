@@ -15,7 +15,7 @@ build-depends:
 
 sources:
 - kind: git_repo
-  url: https://github.com/ib/xarchiver.git
+  url: github:ib/xarchiver.git
   track: master
   ref: 0.5.4.27-2-g46258fc17b34258b732503726201096d0d60d7f9
 
