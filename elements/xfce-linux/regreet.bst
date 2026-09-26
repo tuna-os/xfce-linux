@@ -26,11 +26,12 @@ depends:
 
 sources:
 - kind: git_repo
-  url: https://github.com/rharish101/ReGreet.git
+  url: github:rharish101/ReGreet.git
   track: "0.5.0"
   ref: 0.5.0-0-g290e6f8d65b7034c5b63bc950a20bcf8277ebe5f
   directory: regreet
 - kind: cargo2
+  url: crates:crates
   cargo-lock: regreet/Cargo.lock
   ref:
   - kind: registry
