@@ -235,8 +235,8 @@ journalctl -u xfce-session -n 50
 
 ## Known Issues & Solutions
 
-See [`docs/ci-and-iso-pipeline.md`](docs/ci-and-iso-pipeline.md) for current
-CI/ISO troubleshooting. `docs/technical/SOLUTIONS_AND_ANALYSIS.md` is a
+See [`docs/ci-and-iso-pipeline.md`](docs/ci-and-iso-pipeline.md) for the
+current CI/ISO problem log. `docs/technical/SOLUTIONS_AND_ANALYSIS.md` is a
 dated (2026-05) session report kept for history, not a live issue tracker.
 
 ## Code Review Process
@@ -302,15 +302,15 @@ bst show --deps elements/path/to/element.bst
 - Include code examples where helpful
 - Keep README.md up-to-date
 - Clearly document incompatible changes
-- Update docs/ci-and-iso-pipeline.md when you fix a CI/ISO bug (add an
-  invariant test and a row there, per AGENTS.md's CI gate rules)
+- Update docs/ci-and-iso-pipeline.md when you fix a CI or ISO bug. Add an
+  invariant test and a row there, per AGENTS.md's CI gate rules.
 
 ## Questions?
 
 1. **Check documentation first:** See `docs/` directory
 2. **Review build logs:** `~/.cache/buildstream/logs/`
 3. **Check git history:** Previous commits for context
-4. **See docs/ci-and-iso-pipeline.md:** CI/ISO troubleshooting log
+4. **See docs/ci-and-iso-pipeline.md:** the CI/ISO problem log
 
 ## License
 
