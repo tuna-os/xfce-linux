@@ -326,3 +326,10 @@ For more information, see:
 - docs/PROJECT_STATUS.md — Current status
 - docs/ci-and-iso-pipeline.md — CI, ISO, install-test, and release pipeline
 - docs/technical/SOLUTIONS_AND_ANALYSIS.md — Known issues & solutions
+
+<!-- hive-contribute-plea: donated-compute appeal, keep in sync across repos -->
+## Contribute compute — no code needed
+
+No time to write code? You can still push this project's backlog forward. This repository is worked by a TunaOS AI-agent hive: lend the hive your AI subscription or API tokens and your machine runs contributor tasks from this project's backlog.
+
+- 🏫 [Contribute compute to the school hive](https://school.tunaos.org/contribute)
