@@ -8,7 +8,7 @@ top-level docs instead:
 - **[../README.md](../README.md)** — what this image is, how to pull/build
   it, the stable release channel, and signature verification.
 - **[../AGENTS.md](../AGENTS.md)** — architecture summary, `just` commands,
-  and hard-won gotchas for anyone (human or agent) working on this repo.
+  and known issues for anyone (human or agent) working on this repo.
 - **[../CONTRIBUTING.md](../CONTRIBUTING.md)** — contributor workflow and
   development setup.
 
@@ -22,7 +22,7 @@ top-level docs instead:
   [0001-wayland-greeter.md](adr/0001-wayland-greeter.md)).
 - **[technical/](technical/)** and **[reference/](reference/)** — dated
   session reports from early development (May–August 2026), kept for
-  history. Each file is marked `ste-disable-file` and describes a
-  point-in-time snapshot, not current state. Do not treat metrics, "Known
-  Issues," or completion percentages in these files as live — the top-level
-  README and AGENTS.md reflect what actually ships today.
+  history. Each file is marked `ste-disable-file` and describes the state
+  at a specific time, not current state. Metrics, "Known Issues," or
+  completion percentages in these files are not live. The top-level README
+  and AGENTS.md reflect what actually ships today.

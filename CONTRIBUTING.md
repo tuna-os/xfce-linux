@@ -237,7 +237,7 @@ journalctl -u xfce-session -n 50
 
 See [`docs/ci-and-iso-pipeline.md`](docs/ci-and-iso-pipeline.md) for current
 CI/ISO troubleshooting. `docs/technical/SOLUTIONS_AND_ANALYSIS.md` is a
-dated (2026-05) session report kept for history, not a live issue tracker.
+report from 2026-05 kept for history, not a live issue tracker.
 
 ## Code Review Process
 
