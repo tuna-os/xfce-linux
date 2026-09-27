@@ -92,9 +92,9 @@ for the full pre-merge and post-merge gate sequence.
 ### 4. Documentation
 
 Update relevant documentation:
-- **Code changes:** docs/technical/
-- **Build process:** docs/
-- **Known issues:** docs/technical/SOLUTIONS_AND_ANALYSIS.md
+- **CI/ISO bugs:** docs/ci-and-iso-pipeline.md (add an invariant test too)
+- **Build process:** docs/, AGENTS.md
+- **Architecture decisions:** docs/adr/
 
 ### 5. Commit and Push
 
@@ -235,10 +235,9 @@ journalctl -u xfce-session -n 50
 
 ## Known Issues & Solutions
 
-See `docs/technical/SOLUTIONS_AND_ANALYSIS.md` for:
-- OCI issue with multiple bootc layers (solutions provided)
-- Resolution of dependencies during artifact export
-- SSH authentication workarounds
+See [`docs/ci-and-iso-pipeline.md`](docs/ci-and-iso-pipeline.md) for current
+CI/ISO troubleshooting. `docs/technical/SOLUTIONS_AND_ANALYSIS.md` is a
+dated (2026-05) session report kept for history, not a live issue tracker.
 
 ## Code Review Process
 
@@ -303,14 +302,15 @@ bst show --deps elements/path/to/element.bst
 - Include code examples where helpful
 - Keep README.md up-to-date
 - Clearly document incompatible changes
-- Update SOLUTIONS_AND_ANALYSIS.md with new findings
+- Update docs/ci-and-iso-pipeline.md when you fix a CI/ISO bug (add an
+  invariant test and a row there, per AGENTS.md's CI gate rules)
 
 ## Questions?
 
 1. **Check documentation first:** See `docs/` directory
 2. **Review build logs:** `~/.cache/buildstream/logs/`
 3. **Check git history:** Previous commits for context
-4. **See SOLUTIONS_AND_ANALYSIS.md:** Known issues documented
+4. **See docs/ci-and-iso-pipeline.md:** CI/ISO troubleshooting log
 
 ## License
 
@@ -322,7 +322,6 @@ MIT). Make sure that contributions comply with these licenses.
 **Thank you for your contribution!** 🚀
 
 For more information, see:
-- docs/README.md — Main guide
-- docs/PROJECT_STATUS.md — Current status
+- docs/README.md — Documentation index
+- AGENTS.md — Architecture, commands, and gotchas
 - docs/ci-and-iso-pipeline.md — CI, ISO, install-test, and release pipeline
-- docs/technical/SOLUTIONS_AND_ANALYSIS.md — Known issues & solutions
