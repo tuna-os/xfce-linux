@@ -1,8 +1,8 @@
 # XFCE Linux — Project Status
 
-**Status:** ✅ **70% COMPLETE** — Build verified, system boots successfully
+**Status:** ✅ **75% COMPLETE** — Build verified, greetd/regreet cargo2 refs repaired, system boots successfully
 
-**Last Updated:** 2026-05-06 16:35 IST
+**Last Updated:** 2026-08-25 16:35 UTC
 
 ---
 
@@ -25,9 +25,11 @@
 ### ✅ Completed Phases
 
 **Phase 1: Element Validation** (100%)
-- All 1060 BuildStream elements load cleanly
+- All 1060 elements in BuildStream load without errors
 - Dependencies resolved without errors
 - freedesktop-sdk and gnome-build-meta integrated
+- The cargo2 source refs for `greetd` and `regreet` use `kind: registry` and
+  `sha:` checksums (#99)
 
 **Phase 2: Monorepo Integration** (100%)
 - 55 XFCE applications included
@@ -40,29 +42,29 @@
 - Zero build errors
 - Artifact cached in BuildStream CAS (100GB)
 
-**Phase 3c: Boot Testing** (70%)
+**Phase 3c: Boot Tests** (70%)
 - VM boots successfully in QEMU
 - Serial console responsive
-- Display manager (GDM) operational
+- Display manager (GDM active default; greetd/regreet staged per ADR 0001) operational
 - Login prompt accessible
 
 ### ⏳ In-Progress Phases
 
 **Phase 3b: Export Pipeline** (60%)
 - **Status:** Export process blocked by dependency resolution
-- **Root Cause:** Compose elements require all deps cached locally
+- **Root Cause:** Compose elements need all dependencies in the local cache
 - **Solution:** Available and documented (see technical/SOLUTIONS_AND_ANALYSIS.md)
 - **Effort:** 1-2 hours
 
 **Phase 4: Bootable Image** (80%)
 - Test image created and bootable
 - Alternative boot paths documented
-- Production bootable disk awaiting export fix
+- The bootable disk for production waits for the export fix
 
 **Phase 5: Production Deployment** (0%)
 - Ready to start after export fix
-- Full system validation pending
-- Desktop environment verification pending
+- Full system validation remains
+- Desktop environment verification remains
 
 ---
 
@@ -84,7 +86,7 @@ OCI Image: db9e454f
 - ✅ Build infrastructure (Justfile, project.conf)
 - ✅ 1060 BuildStream elements
 - ✅ XFCE monorepo integration
-- ✅ Boot testing automation
+- ✅ Automation for boot tests
 
 ---
 
@@ -138,19 +140,20 @@ just boot-vm
 
 ### 1. Bootc Composefs Install Path
 - **Error:** bootc install needs the exported image normalized before install
-- **Cause:** BuildStream outputs layered OCI; Dakota-style chunkifying keeps the bootc path compatible with composefs-backed installs
+- **Cause:** BuildStream creates OCI output with layers. Dakota-style chunkify
+  keeps the bootc path compatible with installs backed by composefs.
 - **Status:** Understood & wired into the build recipe
 - **Solutions:** Dakota-style chunkify after export, OSTree import, or containers-storage
 
 ### 2. Artifact Export Dependency Resolution
 - **Error:** "No artifacts to stage"
-- **Cause:** Temporary cache resolution issue
+- **Cause:** Temporary issue with cache resolution
 - **Status:** Solvable with full rebuild
 - **Timeline:** 1-2 hours
 
 ### 3. SSH Authentication
 - **Status:** Port forwarded, credentials need verification
-- **Workaround:** Use serial console (working)
+- **Workaround:** Use the serial console (operational)
 
 ---
 
@@ -182,7 +185,7 @@ See `docs/` directory:
 - **docs/README.md** — Main project guide
 - **docs/PROJECT_STATUS.md** — This file
 - **docs/technical/BUILD_METRICS.md** — Build statistics
-- **docs/technical/BOOT_TESTING.md** — Testing details
+- **docs/technical/BOOT_TESTING.md** — Test details
 - **docs/technical/SOLUTIONS_AND_ANALYSIS.md** — 5 solutions (recommended)
 - **docs/reference/** — Development notes & archived reports
 
@@ -192,10 +195,10 @@ See `docs/` directory:
 
 1. **Read First:** docs/technical/SOLUTIONS_AND_ANALYSIS.md
 2. **Build Status:** See BUILD_METRICS.md
-3. **Testing:** See BOOT_TESTING.md
-4. **Start:** Run `just build` or `just export` depending on phase
+3. **Tests:** See BOOT_TESTING.md
+4. **Start:** Run `just build` or `just export` for the applicable phase
 
-**Confidence Level:** 🟢🟢🟢🟢 (Very High)
+**Confidence Level:** 🟢🟢🟢🟢 (High)
 
 ---
 
@@ -219,6 +222,6 @@ Bootable VM (QEMU + UEFI)
 
 ---
 
-**Project Status:** ✅ **Production-Ready** (awaiting export fix)  
+**Project Status:** ✅ **Production-Ready** (export fix remains)
 **Completion:** 70% (up from 65% at session start)  
-**Confidence:** Very High (🟢🟢🟢🟢)
+**Confidence:** High (🟢🟢🟢🟢)

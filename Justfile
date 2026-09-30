@@ -1,5 +1,7 @@
 # ISO/live/e2e recipes live in iso.justfile (kept separate for readability)
 import "iso.justfile"
+import "just/buildstream.just"
+import "just/disk-image.just"
 
 # List available commands
 [group('info')]
@@ -23,172 +25,6 @@ export vm_cpus := env("VM_CPUS", "4")
 export OCI_IMAGE_CREATED := env("OCI_IMAGE_CREATED", "")
 export OCI_IMAGE_REVISION := env("OCI_IMAGE_REVISION", "")
 export OCI_IMAGE_VERSION := env("OCI_IMAGE_VERSION", "latest")
-
-# ── BuildStream wrapper ──────────────────────────────────────────────
-# Runs any bst command inside the bst2 container via podman.
-# Set BST_FLAGS env var to prepend flags (e.g. --no-interactive --config ...).
-# Usage: just bst build oci/xfce-linux.bst
-#        just bst show oci/xfce-linux.bst
-#        BST_FLAGS="--no-interactive" just bst build oci/xfce-linux.bst
-[group('dev')]
-bst *ARGS:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    mkdir -p "${HOME}/.cache/buildstream"
-    # BST_FLAGS env var allows CI to inject --no-interactive, etc.
-    # Word-splitting is intentional here (flags are space-separated).
-    # shellcheck disable=SC2086
-    podman run --rm \
-        --privileged \
-        --device /dev/fuse \
-        --network=host \
-        -v "{{justfile_directory()}}:/src:rw" \
-        -v "${HOME}/.cache/buildstream:/root/.cache/buildstream:rw" \
-        -w /src \
-        "{{bst2_image}}" \
-        bash -c 'bst --colors "$@"' -- ${BST_FLAGS:-} {{ARGS}}
-
-
-# ── Build log ─────────────────────────────────────────────────────────
-# Run build in background, log to /var/tmp/{{image_name}}-build.log, tail it
-[group('build')]
-bst-build *ARGS:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    LOG=/var/tmp/{{image_name}}-build.log
-    echo "=== Build started at \$(date) ===" > "\$LOG"
-    BST_FLAGS="--max-jobs \$((\$(nproc) / 2)) --fetchers \$(nproc) \${BST_FLAGS:-}"
-    just bst build \${ARGS:-oci/{{image_name}}.bst} >> "\$LOG" 2>&1 &
-    echo "BST PID: \$! — tailing \$LOG (Ctrl-C stops tail, build continues)"
-    tail -f "\$LOG"
-
-[group('build')]
-log:
-    tail -f /var/tmp/{{image_name}}-build.log
-
-# ── Build ─────────────────────────────────────────────────────────────
-# Build the OCI image, load it into podman, and chunkify the result.
-[group('build')]
-build:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "==> Building OCI image with BuildStream (inside bst2 container)..."
-    just bst build oci/{{image_name}}.bst
-
-    just export
-
-# ── Export ─────────────────────────────────────────────────────────────
-# Checkout the built OCI image from BuildStream and load it into podman.
-# Assumes `bst build oci/{{image_name}}.bst` has already completed.
-#
-# Uses SUDO_CMD to handle root vs non-root: CI runs as root (no sudo),
-# local dev needs sudo for podman access to containers-storage.
-[group('build')]
-export:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Use sudo unless already root (CI runners are root)
-    SUDO_CMD=""
-    if [ "$(id -u)" -ne 0 ]; then
-        SUDO_CMD="sudo"
-    fi
-
-    echo "==> Exporting OCI image..."
-    rm -rf .build-out
-    just bst artifact checkout oci/{{image_name}}.bst --directory /src/.build-out
-
-    # Load the multi-layer OCI image and squash into a single layer.
-    echo "==> Loading and squashing OCI image..."
-    IMAGE_ID=$($SUDO_CMD podman pull -q oci:.build-out)
-    rm -rf .build-out
-
-    # Build label arguments for dynamic OCI metadata
-    LABEL_ARGS=""
-    if [ -n "${OCI_IMAGE_CREATED}" ]; then
-        LABEL_ARGS="${LABEL_ARGS} --label org.opencontainers.image.created=${OCI_IMAGE_CREATED}"
-    fi
-    if [ -n "${OCI_IMAGE_REVISION}" ]; then
-        LABEL_ARGS="${LABEL_ARGS} --label org.opencontainers.image.revision=${OCI_IMAGE_REVISION}"
-    fi
-    if [ -n "${OCI_IMAGE_VERSION}" ]; then
-        LABEL_ARGS="${LABEL_ARGS} --label org.opencontainers.image.version=${OCI_IMAGE_VERSION}"
-    fi
-
-    # Squash, inject build-date VERSION_ID, and apply dynamic labels.
-    DATE_TAG="$(date -u +%Y%m%d)"
-    # shellcheck disable=SC2086
-    printf 'FROM %s\nRUN sed -i "s/^VERSION_ID=.*/VERSION_ID=\\"%s\\"/" /usr/lib/os-release \\\n    && sed -i "s/^IMAGE_VERSION=.*/IMAGE_VERSION=\\"%s\\"/" /usr/lib/os-release\n' "$IMAGE_ID" "$DATE_TAG" "$DATE_TAG" \
-        | $SUDO_CMD podman build --pull=never --security-opt label=type:unconfined_t --squash-all ${LABEL_ARGS} -t "{{image_name}}:{{image_tag}}" -f - .
-    $SUDO_CMD podman rmi "$IMAGE_ID" || true
-
-    echo "==> Export complete. Image loaded as {{image_name}}:{{image_tag}}"
-    $SUDO_CMD podman images | grep -E "{{image_name}}|REPOSITORY" || true
-
-    # Match Dakota's post-export flow so the boot image is chunkified before bootc.
-    just chunkify "{{image_name}}:{{image_tag}}"
-
-# ── Clean ─────────────────────────────────────────────────────────────
-# Remove generated artifacts (disk image, OVMF vars, build output).
-[group('build')]
-clean:
-    rm -f bootable.raw .ovmf-vars.fd
-    rm -rf .build-out
-
-# ── Containerfile build (alternative) ────────────────────────────────
-[group('build')]
-build-containerfile $image_name=image_name:
-    sudo podman build --security-opt label=type:unconfined_t --squash-all -t "${image_name}:latest" .
-
-# ── bootc helper ─────────────────────────────────────────────────────
-[group('dev')]
-bootc *ARGS:
-    sudo podman run \
-        --rm --privileged --pid=host \
-        -it \
-        -v /var/lib/containers:/var/lib/containers \
-        -v /dev:/dev \
-        -v "{{base_dir}}:/data" \
-        --security-opt label=type:unconfined_t \
-        "{{image_name}}:{{image_tag}}" bootc {{ARGS}}
-
-# ── Generate bootable disk image ─────────────────────────────────────
-[group('test')]
-generate-bootable-image $base_dir=base_dir $filesystem=filesystem:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    if ! sudo podman image exists "{{image_name}}:{{image_tag}}"; then
-        echo "ERROR: Image '{{image_name}}:{{image_tag}}' not found in podman." >&2
-        echo "Run 'just build' first to build and export the OCI image." >&2
-        exit 1
-    fi
-
-    if [ ! -e "${base_dir}/bootable.raw" ] ; then
-        echo "==> Creating 30G sparse disk image..."
-        fallocate -l 30G "${base_dir}/bootable.raw"
-    fi
-
-    echo "==> Installing OS to disk image via bootc..."
-    BUILD_IMAGE_NAME="{{image_name}}" just bootc install to-disk \
-        --via-loopback /data/bootable.raw \
-        --filesystem "${filesystem}" \
-        --wipe \
-        --composefs-backend \
-        --bootloader systemd \
-        --karg systemd.firstboot=no \
-        --karg splash \
-        --karg quiet \
-        --karg console=tty0 \
-        --karg console=ttyS0 \
-        --karg systemd.debug_shell=ttyS1
-
-    echo "==> Bootable disk image ready: ${base_dir}/bootable.raw"
-    sync
-
-    # Remove stale qcow2 so boot-vm uses the fresh raw image
-    rm -f "${base_dir}/bootable.qcow2"
 
 # ── Boot VM ──────────────────────────────────────────────────────────
 # Boot the raw disk image.
@@ -398,34 +234,6 @@ test name="xfce-linux":
     echo "==> Waiting 45s for boot..."
     sleep 45
     just logs "{{name}}"
-
-# ── Convert to qcow2 ──────────────────────────────────────────────────
-[group('test')]
-convert-to-qcow2 $base_dir=base_dir:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    RAW="{{base_dir}}/bootable.raw"
-    QCOW2="{{base_dir}}/bootable.qcow2"
-
-    if [ ! -e "$RAW" ]; then
-        echo "ERROR: ${RAW} not found. Run 'just generate-bootable-image' first." >&2
-        exit 1
-    fi
-
-    echo "==> Converting ${RAW} to ${QCOW2}..."
-
-    if command -v qemu-img &>/dev/null; then
-        qemu-img convert -f raw -O qcow2 "$RAW" "$QCOW2"
-    else
-        echo "    Using containerized qemu-img..."
-        podman run --rm \
-            -v "{{base_dir}}:/data" \
-            --entrypoint qemu-img \
-            ghcr.io/qemus/qemu:latest \
-            convert -f raw -O qcow2 "/data/bootable.raw" "/data/bootable.qcow2"
-    fi
-    echo "==> Conversion complete: ${QCOW2}"
 
 # ── Show me the future ────────────────────────────────────────────────
 # The full end-to-end: build the OCI image, install it to a bootable

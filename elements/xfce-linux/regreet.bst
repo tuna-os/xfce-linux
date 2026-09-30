@@ -7,9 +7,19 @@ description: |
   deps.bst). This element builds and installs the binary regardless,
   since it's independently useful to have ready, but nothing launches it.
 
+# buildsystem-make brings the C toolchain (gcc/binutils) into the build
+# sandbox. rustc drives linking through clang, and without binutils' `ld`
+# every crate's build script dies with "clang: error: unable to execute
+# command: posix_spawn failed: No such file or directory" — the reason this
+# element failed on every Multi-Runner run since it landed (#135). Same
+# dependency shape as every cargo element in tuna-os/tromso.
+build-depends:
+- freedesktop-sdk.bst:public-stacks/buildsystem-make.bst
+- freedesktop-sdk.bst:components/pkg-config.bst
+- freedesktop-sdk.bst:components/rust.bst
+
 depends:
 - freedesktop-sdk.bst:public-stacks/runtime-minimal.bst
-- freedesktop-sdk.bst:components/rust.bst
 - gnome-build-meta.bst:sdk/gtk.bst
 - freedesktop-sdk.bst:components/glib.bst
 - freedesktop-sdk.bst:components/libxml2.bst

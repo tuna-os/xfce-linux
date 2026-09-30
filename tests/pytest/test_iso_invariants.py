@@ -105,16 +105,25 @@ def test_high_frequency_workflows_cancel_superseded_runs():
         "test.yml",
         "build-iso.yml",
         "build-and-publish-xfce-linux.yml",
-        "build-multirunner.yml",
     )
     for name in names:
         text = (workflows / name).read_text()
         assert "concurrency:" in text, f"{name} lacks a concurrency group"
         assert re.search(
-            r"cancel-in-progress:\s*true", text
+            r"^\s*cancel-in-progress:\s*true\s*(?:#.*)?$", text, re.MULTILINE
         ), f"{name} queues superseded same-ref runs"
 
     iso = (workflows / "build-iso.yml").read_text()
     assert "github.event.workflow_run.head_branch || github.ref_name" in iso, (
         "push and workflow_run ISO triggers must normalize to the same branch key"
+    )
+
+
+def test_scheduled_multirunner_preserves_in_progress_builds():
+    """The multi-hour scheduled build must queue instead of discarding work."""
+    workflow = (REPO / ".github" / "workflows" / "build-multirunner.yml").read_text()
+
+    assert not re.search(r"^\s*push:\s*(?:#.*)?$", workflow, re.MULTILINE)
+    assert re.search(
+        r"^\s*cancel-in-progress:\s*false\s*(?:#.*)?$", workflow, re.MULTILINE
     )

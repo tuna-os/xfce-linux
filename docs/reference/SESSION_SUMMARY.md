@@ -1,3 +1,4 @@
+<!-- ste-disable-file: this dated report preserves the historical session record and its diagnostic wording -->
 # XFCE Linux BuildStream Project — Session Wrap-Up
 
 **Date**: 2026-05-05  
@@ -338,7 +339,7 @@ A: OCI image + XFCE binaries ≈ 2-3GB; bootable disk image (sparse) ≈ 30GB no
 - BuildStream: https://buildstream.build/
 - freedesktop-sdk: https://freedesktop-sdk.io/
 - gnome-build-meta: https://gitlab.gnome.org/GNOME/gnome-build-meta/
-- XFCE Wayland: https://github.com/hanthor/xfce-wayland
+- XFCE Wayland: https://github.com/tuna-os/xfce-linux
 - Bootc: https://containers.github.io/bootc/
 
 ---

@@ -22,11 +22,11 @@ This project builds and integrates the following components, each with their own
 #### XFCE Desktop Environment
 - **License:** GPL 2.0 or later
 - **Components:** xfce4-session, xfce4-panel, xfwm4, xfdesktop, xfce4-terminal, etc.
-- **Source:** https://github.com/xfce-mirror/ and https://github.com/hanthor/xfce-wayland
+- **Source:** https://github.com/xfce-mirror/ and https://github.com/tuna-os/xfce-linux
 
 #### xfce-wayland (Wayland Support)
 - **License:** GPL 2.0 or later
-- **Source:** https://github.com/hanthor/xfce-wayland
+- **Source:** https://github.com/tuna-os/xfce-linux
 
 #### Linux Kernel
 - **License:** GPL 2.0

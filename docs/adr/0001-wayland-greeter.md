@@ -4,29 +4,33 @@ Status: proposed · 2026-07-19
 
 ## Context
 
-XFCE Linux runs XFCE on Wayland via the xfwl4 compositor. XFCE's traditional
-login stack (LightDM + lightdm-gtk-greeter) is X11-only: LightDM can *start*
-Wayland sessions, but the GTK greeter itself renders on X, dragging Xorg into
-an otherwise Wayland-only image. Today the image inherits **GDM** from the
-gnomeos base and the live ISO autologs in via GDM — functional, but it pulls
-GNOME Shell machinery into a "vanilla XFCE" system and looks like GNOME at
-the door.
+XFCE Linux runs XFCE on Wayland through the xfwl4 compositor. The traditional
+stack for XFCE login uses LightDM and lightdm-gtk-greeter, which support only
+X11. LightDM can *start* Wayland sessions, but the GTK greeter renders through
+X. This adds Xorg to an image that otherwise uses only Wayland.
+
+Today, the image inherits **GDM** from the gnomeos base. The live ISO uses GDM
+for automatic login. This works, but it adds GNOME Shell components to a
+"vanilla XFCE" system. The login screen also looks like GNOME.
 
 ## Options
 
-1. **Keep GDM, brand it** — zero engineering; heaviest footprint
-   (gnome-shell as greeter), GNOME lock screen semantics. Fine as interim.
-2. **greetd + gtkgreet/regreet under xfwl4/cage** — greetd is a tiny session
-   manager; regreet (GTK4) or gtkgreet run under any Wayland compositor
-   (cage, or xfwl4 itself once stable). Small, Wayland-native, fully
-   themeable to XFCE branding. This is what most wlroots distros ship.
-   Effort: packaging + session-config element + PAM config. No upstream-XFCE
-   blessing, but nothing about it is XFCE-hostile.
-3. **Port lightdm-gtk-greeter to Wayland** — "the official greeter, on
-   Wayland" story; requires LightDM's Wayland seat support plus a GTK4/layer-
-   shell rewrite of the greeter. Largest effort, upstream coordination with
-   xfce/lightdm maintainers; would be a genuine upstream contribution and
-   fits the "our own official XFCE greeter" ambition.
+1. **Keep GDM and add brand assets.** This option needs no development work,
+   but has the largest footprint. It uses gnome-shell as the greeter and the
+   lock screen behavior from GNOME. It is acceptable as a temporary option.
+2. **Use greetd with gtkgreet or regreet under xfwl4 or cage.** Greetd is a
+   small manager for sessions. Regreet (GTK4) and gtkgreet can run under any
+   Wayland compositor. They can use cage, or xfwl4 when it is stable. This
+   option is small, native to Wayland, and themeable with XFCE assets. Most
+   wlroots distributions use it. Effort: package definitions, a session config
+   element, and PAM config. Upstream XFCE has not formally approved it, but it
+   is compatible with XFCE.
+3. **Port lightdm-gtk-greeter to Wayland.** This provides an official greeter
+   on Wayland. It needs Wayland seat support in LightDM and a rewrite of the
+   greeter for GTK4 and layer shell. This option has the largest effort and
+   needs coordination with the xfce and LightDM maintainers. It would be a
+   direct upstream contribution and support the goal for an official XFCE
+greeter.
 
 ## Decision (proposed)
 
@@ -34,14 +38,14 @@ Short term: keep GDM (option 1) — it works and the live ISO depends on its
 autologin today.
 Target: **option 2 (greetd + regreet)** as the shipped greeter for the
 opinionated XFCE layer, branded with XFCE Linux assets.
-Long term / upstream track: prototype option 3 with the XFCE project if
-there's appetite — it would become the real "official XFCE Wayland greeter".
+Long term / upstream track: prototype option 3 with the XFCE project if it has
+interest. This could become the official greeter for XFCE on Wayland.
 
 ## Consequences
 
 - A `greetd` element + `regreet` element + session-config change, and the
   live ISO's autologin has to move from GDM custom.conf to greetd's
   `initial_session`.
-- GNOME Shell/GDM can then be excluded from the image (size + purity win).
-- Revisit when xfwl4 is stable enough to host the greeter itself (kiosk
-  mode), removing the cage dependency.
+- The image can then exclude GNOME Shell and GDM, which decreases its size.
+- Revisit the decision when xfwl4 can host the greeter in kiosk mode. At that
+  point, the image can remove the cage dependency.
