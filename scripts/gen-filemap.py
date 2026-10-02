@@ -79,8 +79,11 @@ def bst(*args: str) -> str:
 
 
 def list_elements(target: str) -> list[str]:
-    """Return all element names in the full dependency tree of *target*."""
-    out = bst("show", "--format", "%{name}", "--deps", "all", target)
+    """Return all element names in the runtime dependency tree of *target*."""
+    # Runtime deps only: build-only deps (bootstrap toolchain etc.) never land
+    # in the image, and their artifacts are not guaranteed to be in the local
+    # CAS.
+    out = bst("show", "--format", "%{name}", "--deps", "run", target)
     # Filter to lines that look like BST element paths (end in .bst).
     # Some elements override the name variable (e.g. secure-boot key elements)
     # which causes %{name} to output the variable value instead.

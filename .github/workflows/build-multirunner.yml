@@ -212,6 +212,13 @@ jobs:
           just bst artifact checkout \
             "${{ needs.multirunner.outputs.final_target }}" --directory /src/.build-out
           du -sh .build-out
+          # chunkify needs the per-element file map, which is read from the
+          # CAS, so generate it now, before the CAS is deleted below. `just
+          # export` picks it up via FILEMAP_PREGENERATED. Without this every
+          # nightly built fine and then died in chunkify with "None of the
+          # specified artifacts are cached" (run 36805045437).
+          python3 scripts/gen-filemap.py
+          test -s files/fakecap-manifest.tsv
           # Removed inside the bst container: the cache tree is written by
           # that container's root, so a host-side rm can hit permission
           # errors depending on the podman mapping.
@@ -233,6 +240,7 @@ jobs:
           OCI_IMAGE_CREATED: ${{ steps.timestamp.outputs.created }}
           # The CAS is gone by now (previous step); .build-out is the artifact.
           EXPORT_REUSE_CHECKOUT: '1'
+          FILEMAP_PREGENERATED: '1'
         run: |
           just export
           echo "image_ref=${{ env.IMAGE_NAME }}:latest" >> "$GITHUB_OUTPUT"

@@ -378,8 +378,16 @@ chunkify image_ref:
         gcc -O2 -o "$FAKECAP_RESTORE" "{{justfile_directory()}}/files/fakecap/fakecap-restore.c"
     fi
 
-    echo "==> Generating component filemap..."
-    python3 scripts/gen-filemap.py
+    # gen-filemap.py reads the BuildStream CAS. CI deletes the CAS before
+    # export (#159), so it pre-generates the filemap while the cache still
+    # exists and sets FILEMAP_PREGENERATED=1; regenerating here would fail with
+    # "None of the specified artifacts are cached".
+    if [ "${FILEMAP_PREGENERATED:-0}" = "1" ] && [ -s files/fakecap-manifest.tsv ]; then
+        echo "==> Using pre-generated component filemap"
+    else
+        echo "==> Generating component filemap..."
+        python3 scripts/gen-filemap.py
+    fi
 
     LOWER=$($SUDO_CMD podman image mount "{{image_ref}}")
 
