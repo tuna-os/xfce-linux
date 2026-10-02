@@ -112,6 +112,10 @@ jobs:
             iso-sd-boot "$TARGET"
           sudo cp "/var/iso-build/${TARGET}-live.iso" "output/${TARGET}-live.iso"
           sudo chown -R "$USER:$(id -gn)" output/
+          # sudo keeps XDG_RUNTIME_DIR, so the root `just` above created its
+          # temp dir at /run/user/<uid>/just as root. The unprivileged `just`
+          # in the next step then fails with "Permission denied (os error 13)".
+          sudo rm -rf "/run/user/$(id -u)/just"
           echo "duration=$(( $(date +%s) - START ))" >> "$GITHUB_OUTPUT"
           echo "iso_size=$(stat -c%s output/${TARGET}-live.iso 2>/dev/null || echo 0)" >> "$GITHUB_OUTPUT"
 

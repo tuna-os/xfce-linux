@@ -50,8 +50,12 @@ dbus-daemon --system --fork --nopidfile
 # Flatpak pulls from the tuna-os OCI remote through flatpak-oci-authenticator,
 # a D-Bus service on the session bus. With no session bus, GDBus tries X11
 # autolaunch and fails: "Cannot autolaunch D-Bus without X11 $DISPLAY".
-DBUS_SESSION_BUS_ADDRESS="$(dbus-daemon --session --fork --nopidfile --print-address)"
+# The address goes through a file, not $(...): the forked daemon keeps the
+# command substitution's pipe open, so $(...) would never return.
+dbus-daemon --session --fork --nopidfile --print-address=3 3>/tmp/session-bus-address
+DBUS_SESSION_BUS_ADDRESS="$(head -n1 /tmp/session-bus-address)"
 export DBUS_SESSION_BUS_ADDRESS
+rm -f /tmp/session-bus-address
 sleep 1
 
 # ── Seed flatpak repo from build cache (warm start) ──────────────────────────
