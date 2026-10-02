@@ -40,6 +40,10 @@ fi
 
 # The ref may already carry a tag; oras accepts <repo>:<tag>@<digest>.
 echo "cas-restore-stream: streaming ${REF}@${DIGEST} ($((SIZE / 1024 / 1024)) MiB compressed) into ${CACHE_DIR}"
-oras blob fetch --output - "${REF}@${DIGEST}" \
+# ghcr-blob-stream.py rather than `oras blob fetch --output -`: GHCR cuts
+# these multi-GB downloads with "PROTOCOL_ERROR" every few minutes and oras
+# cannot resume, so a cut threw the whole restore away. The helper resumes
+# with HTTP Range and verifies the digest.
+python3 "$(dirname "$0")/ghcr-blob-stream.py" "$REF" "$DIGEST" "$SIZE" \
     | zstd -d -T0 \
     | tar -xf - -C "$CACHE_DIR"
