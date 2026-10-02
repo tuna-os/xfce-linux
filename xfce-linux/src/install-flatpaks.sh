@@ -20,6 +20,31 @@ FLATPAK_CACHE="/var/cache/flatpak-dl"
 # and has ~60 GB free, so use a subdirectory of it as TMPDIR instead.
 mkdir -p "${FLATPAK_CACHE}/tmp"
 export TMPDIR="${FLATPAK_CACHE}/tmp"
+# The image leaves /etc/machine-id empty or "uninitialized"; systemd fills it
+# on first boot.
+# Without a valid ID, dbus and flatpak's GDBus refuse to start a bus
+# ("Cannot spawn a message bus without a machine-id"), and the installer
+# install fails. Use a throwaway ID for this build step only, then put the
+# file back exactly as it was so every installed system still gets its own.
+MACHINE_ID_STATE=absent
+if [ -e /etc/machine-id ]; then
+    MACHINE_ID_STATE=present
+    cp -a /etc/machine-id /tmp/machine-id.orig
+fi
+restore_machine_id() {
+    if [ "$MACHINE_ID_STATE" = present ]; then
+        cp -a /tmp/machine-id.orig /etc/machine-id
+    else
+        rm -f /etc/machine-id
+    fi
+    rm -f /tmp/machine-id.orig
+}
+trap restore_machine_id EXIT
+if ! grep -qxE '[0-9a-f]{32}' /etc/machine-id 2>/dev/null; then
+    rm -f /etc/machine-id
+    tr -d '-' < /proc/sys/kernel/random/uuid > /etc/machine-id
+fi
+
 mkdir -p /run/dbus
 dbus-daemon --system --fork --nopidfile
 sleep 1
