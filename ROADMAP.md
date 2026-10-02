@@ -1,6 +1,6 @@
 # XFCE Linux Roadmap
 
-**Last updated**: 2026-08-22 | **Status**: Alpha — first release blocked
+**Last updated**: 2026-09-30 | **Status**: Alpha — first release blocked
 
 Part of the [TunaOS](https://tunaos.org) ecosystem. XFCE Linux is the
 lightweight XFCE Wayland OCI image, built from source with BuildStream.
@@ -11,21 +11,27 @@ The near-term goal is one reproducible, installable Beta release. Release
 readiness is measured by a promoted outcome, not by the presence of workflows
 or the closure of implementation issues.
 
-As of 2026-08-22, the repository has no GitHub Release or Git tag. Scheduled
+As of 2026-09-30, the repository has no GitHub Release or Git tag. Scheduled
 multi-runner image builds and their downstream live-ISO runs remain red, so the
 project remains Alpha even though the stable-promotion machinery exists.
+
+The current blocker has a consistent shape: on the last six scheduled
+multi-runner runs every chunk job succeeded and the final assembly job
+(`build_final`) did not, ending cancelled five times and failed once after
+roughly 11–17 hours of wall clock. Chunked builds are not the problem; the
+final assembly step is where the release candidate is lost.
 
 ## Alpha → Beta release gate
 
 All evidence below must refer to the same candidate commit. The release tracker
 stays open until every row is evidenced.
 
-| Outcome | Exit evidence | Status (2026-08-22) |
+| Outcome | Exit evidence | Status (2026-09-30) |
 | --- | --- | --- |
-| Reproducible OCI image | A scheduled multi-runner build publishes an image and records its immutable digest | Blocked — latest scheduled build failed |
-| Matching live media | ISO, checksum, signature, and certificate are published for the candidate | Blocked — downstream live-ISO run failed |
-| Install validation | Plain and LUKS install E2E checks pass against the candidate | Blocked — latest scheduled install checks failed |
-| Stable promotion | `stable` resolves to the candidate digest and the promotion workflow verifies the image and ISO objects | Blocked on build and install gates |
+| Reproducible OCI image | A scheduled multi-runner build publishes an image and records its immutable digest | Blocked — chunk jobs pass, `build_final` cancelled/failed on the last six scheduled runs |
+| Matching live media | ISO, checksum, signature, and certificate are published for the candidate | Blocked — downstream live-ISO run failed 09-28, 09-29, and 09-30 |
+| Install validation | Plain and LUKS install E2E checks pass against the candidate | Blocked — plain install failed 09-29, LUKS install failed 09-28 |
+| Stable promotion | `stable` resolves to the candidate digest and the promotion workflow verifies the image and ISO objects | Blocked — promotion run failed 09-29, and on the build and install gates above |
 | Discoverable release | A GitHub Release records the digest, signed artifact URLs, known limitations, and upgrade path | Not started — no releases or tags |
 | User-path validation | The public install guide is followed successfully against the promoted candidate | Not started |
 
@@ -40,6 +46,8 @@ with a release candidate, but must be recorded before Beta is announced.
 - Reopen the release tracker when evidence regresses before promotion.
 - Do not count workflow implementation or a single isolated green job as a
   completed release outcome.
+- Treat a run whose chunk jobs pass but whose final assembly job does not as a
+  red build gate, not a partial success.
 
 ## After the first Beta
 
