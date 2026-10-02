@@ -1,0 +1,26 @@
+From: tuna-os xfce-linux
+Subject: [PATCH] dropdown: guard layer-shell idle sources in finalize
+
+set_monitor_idle_id and monitor_removed_idle_id only exist in the struct
+when HAVE_GTK_LAYER_SHELL is defined, but 1.2.0 touches them
+unconditionally in finalize, so the build fails without gtk-layer-shell.
+Fixed upstream on master the same way; drop this patch with the next
+release.
+
+--- a/terminal/terminal-window-dropdown.c
++++ b/terminal/terminal-window-dropdown.c
+@@ -567,6 +567,7 @@
+   if (dropdown->animation_timeout_id != 0)
+     g_source_remove (dropdown->animation_timeout_id);
+ 
++#ifdef HAVE_GTK_LAYER_SHELL
+   if (dropdown->set_monitor_idle_id != 0)
+     g_source_remove (dropdown->set_monitor_idle_id);
+ 
+@@ -573,5 +574,6 @@
+   if (dropdown->monitor_removed_idle_id != 0)
+     g_source_remove (dropdown->monitor_removed_idle_id);
++#endif
+ 
+   if (dropdown->status_icon != NULL)
+     g_object_unref (G_OBJECT (dropdown->status_icon));
