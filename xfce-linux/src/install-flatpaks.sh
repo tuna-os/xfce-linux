@@ -33,11 +33,11 @@ if [ -e /etc/machine-id ]; then
 fi
 restore_machine_id() {
     if [ "$MACHINE_ID_STATE" = present ]; then
-        cp -a /tmp/machine-id.orig /etc/machine-id
+        cp -a /tmp/machine-id.orig /etc/machine-id || true
     else
-        rm -f /etc/machine-id
+        rm -f /etc/machine-id || true
     fi
-    rm -f /tmp/machine-id.orig
+    rm -f /tmp/machine-id.orig || true
 }
 trap restore_machine_id EXIT
 if ! grep -qxE '[0-9a-f]{32}' /etc/machine-id 2>/dev/null; then
@@ -47,6 +47,11 @@ fi
 
 mkdir -p /run/dbus
 dbus-daemon --system --fork --nopidfile
+# Flatpak pulls from the tuna-os OCI remote through flatpak-oci-authenticator,
+# a D-Bus service on the session bus. With no session bus, GDBus tries X11
+# autolaunch and fails: "Cannot autolaunch D-Bus without X11 $DISPLAY".
+DBUS_SESSION_BUS_ADDRESS="$(dbus-daemon --session --fork --nopidfile --print-address)"
+export DBUS_SESSION_BUS_ADDRESS
 sleep 1
 
 # ── Seed flatpak repo from build cache (warm start) ──────────────────────────
