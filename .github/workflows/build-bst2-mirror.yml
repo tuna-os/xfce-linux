@@ -1,6 +1,11 @@
 name: Build and push bst2 to GHCR
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build:
     runs-on: ubuntu-24.04
