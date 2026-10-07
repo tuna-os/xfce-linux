@@ -57,19 +57,22 @@ public:
         SystemAccount=false
         EOF
       # Enable SSH
+      #
+      # No authorized_keys and no PermitRootLogin override are baked in here.
+      # A key committed to this element is a key in every published image, so
+      # whoever holds the private half can log in as root on every machine
+      # that installs xfce-linux; an image cannot rotate or revoke it, and
+      # `PermitRootLogin yes` additionally re-enabled root password
+      # authentication on top of the empty root password this image ships.
+      #
+      # sshd stays enabled, and OpenSSH's default PermitRootLogin
+      # (prohibit-password) still accepts a root login by key. To reach a VM
+      # over SSH, add your own public key to the deployment instead, for
+      # example:
+      #
+      #   just vm-ip xfce-linux
+      #   ssh-copy-id root@<ip>          # once, from the console session
+      #
+      # or drop a key into /root/.ssh/authorized_keys from the live session
+      # before first boot.
       - systemctl enable sshd || true
-      - mkdir -p /root/.ssh
-      - echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICPOZx220I8Av7KmEAOib4iAKZFCzPp8cwtzvteJJ7VB james@karnataka" > /root/.ssh/authorized_keys
-      - chmod 700 /root/.ssh
-      - chmod 600 /root/.ssh/authorized_keys
-      - mkdir -p /etc/ssh/sshd_config.d
-      - echo "PermitRootLogin yes" > /etc/ssh/sshd_config.d/01-permit-root-login.conf
-
-
-
-
-
-
-
-
-
