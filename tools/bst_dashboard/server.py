@@ -92,17 +92,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
             log_path = None
             if "path" in params:
                 # Direct path (for failures) — validate it stays inside buildstream logs
-                candidate = urllib.parse.unquote(params["path"])
-                bst_logs = os.path.expanduser("~/.cache/buildstream/logs")
-                if os.path.abspath(candidate).startswith(bst_logs):
+                raw_path = urllib.parse.unquote(params["path"])
+                candidate = os.path.realpath(raw_path)
+                bst_logs = os.path.realpath(os.path.expanduser("~/.cache/buildstream/logs"))
+                if candidate.startswith(bst_logs + os.sep):
                     log_path = candidate
             elif "hash" in params:
                 h = params["hash"]
                 if self.state:
                     with self.state._lock:
-                        entry = self.state.active.get(h)
-                        if entry:
-                            log_path = entry.get("log")
+                        for k, v in self.state.active.items():
+                            if k == h:
+                                log_path = v.get("log")
+                                break
             if not log_path or not os.path.exists(log_path):
                 body = b"Log not available"
                 self.send_response(404)

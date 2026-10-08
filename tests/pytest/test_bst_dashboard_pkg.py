@@ -11,11 +11,14 @@ TOOLS_DIR = str(PROJECT_ROOT / "tools")
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
+import io
+
 from bst_dashboard.model import State
 from bst_dashboard.parser import parse_line, reset_state, enrich_cmake
 from bst_dashboard.telemetry import TelemetrySampler
 from bst_dashboard.process import BuildProcessManager
 from bst_dashboard.deptree import DeptreeService
+from bst_dashboard.server import DashboardHandler
 
 
 def test_package_model_state_defaults():
@@ -85,3 +88,50 @@ def test_package_deptree_service_fetch():
         assert data["status"] == "ready"
         assert "pkg.bst" in data["nodes"]
         assert data["nodes"]["pkg.bst"] == ["dep1.bst", "dep2.bst"]
+
+
+def _make_server_handler(path: str, state=None):
+    handler = DashboardHandler.__new__(DashboardHandler)
+    handler.path = path
+    handler.headers = {"Content-Length": "0"}
+    handler.rfile = io.BytesIO(b"")
+    handler.wfile = io.BytesIO()
+    handler.state = state or State()
+    handler.process_manager = None
+    handler.telemetry = None
+    handler.deptree_service = None
+    handler.html_content = "<html>test</html>"
+    handler.send_response = mock.Mock()
+    handler.send_header = mock.Mock()
+    handler.end_headers = mock.Mock()
+    return handler
+
+
+def test_package_dashboard_handler_api_log_safe_and_unsafe_paths(monkeypatch, tmp_path):
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    monkeypatch.setattr("os.path.expanduser", lambda p: str(logs_dir))
+
+    # Inside logs dir -> 200
+    inside = logs_dir / "build.log"
+    inside.write_text("success log content\n")
+    h_ok = _make_server_handler(f"/api/log?path={inside}")
+    h_ok.do_GET()
+    h_ok.send_response.assert_called_once_with(200)
+    assert b"success log content" in h_ok.wfile.getvalue()
+
+    # Outside logs dir -> 404
+    outside = tmp_path / "outside.log"
+    outside.write_text("secret\n")
+    h_bad = _make_server_handler(f"/api/log?path={outside}")
+    h_bad.do_GET()
+    h_bad.send_response.assert_called_once_with(404)
+
+    # By hash -> 200
+    state = State()
+    state.active["deadbeef"] = {"log": str(inside)}
+    h_hash = _make_server_handler("/api/log?hash=deadbeef", state=state)
+    h_hash.do_GET()
+    h_hash.send_response.assert_called_once_with(200)
+    assert b"success log content" in h_hash.wfile.getvalue()
+

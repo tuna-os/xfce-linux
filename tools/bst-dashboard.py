@@ -395,16 +395,18 @@ class Handler(DashboardHandler):
             params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
             log_path = None
             if "path" in params:
-                candidate = urllib.parse.unquote(params["path"])
-                bst_logs = os.path.expanduser("~/.cache/buildstream/logs")
-                if os.path.abspath(candidate).startswith(bst_logs):
+                raw_path = urllib.parse.unquote(params["path"])
+                candidate = os.path.realpath(raw_path)
+                bst_logs = os.path.realpath(os.path.expanduser("~/.cache/buildstream/logs"))
+                if candidate.startswith(bst_logs + os.sep):
                     log_path = candidate
             elif "hash" in params:
                 h = params["hash"]
                 with STATE._lock:
-                    entry = STATE.active.get(h)
-                    if entry:
-                        log_path = entry.get("log")
+                    for k, v in STATE.active.items():
+                        if k == h:
+                            log_path = v.get("log")
+                            break
             if not log_path or not os.path.exists(log_path):
                 body = b"Log not available"
                 self.send_response(404)
