@@ -1,6 +1,6 @@
 # XFCE Linux Roadmap
 
-**Last updated**: 2026-08-22 | **Status**: Alpha — first release blocked
+**Last updated**: 2026-09-17 | **Status**: Alpha — Beta release gate verification in progress
 
 Part of the [TunaOS](https://tunaos.org) ecosystem. XFCE Linux is the
 lightweight XFCE Wayland OCI image, built from source with BuildStream.
@@ -11,23 +11,23 @@ The near-term goal is one reproducible, installable Beta release. Release
 readiness is measured by a promoted outcome, not by the presence of workflows
 or the closure of implementation issues.
 
-As of 2026-08-22, the repository has no GitHub Release or Git tag. Scheduled
-multi-runner image builds and their downstream live-ISO runs remain red, so the
-project remains Alpha even though the stable-promotion machinery exists.
+As of September 2026, CI image signing has migrated to static cosign keys (#164). Scheduled
+multi-runner image builds and live-ISO verification pipelines are undergoing final Q4 audit,
+moving the project toward its first tagged Beta release once all exit gates are satisfied.
 
 ## Alpha → Beta release gate
 
 All evidence below must refer to the same candidate commit. The release tracker
 stays open until every row is evidenced.
 
-| Outcome | Exit evidence | Status (2026-08-22) |
+| Outcome | Exit evidence | Status (2026-09-17) |
 | --- | --- | --- |
-| Reproducible OCI image | A scheduled multi-runner build publishes an image and records its immutable digest | Blocked — latest scheduled build failed |
-| Matching live media | ISO, checksum, signature, and certificate are published for the candidate | Blocked — downstream live-ISO run failed |
-| Install validation | Plain and LUKS install E2E checks pass against the candidate | Blocked — latest scheduled install checks failed |
+| Reproducible OCI image | A scheduled multi-runner build publishes an image and records its immutable digest | In progress — cosign key signing enabled (#164) |
+| Matching live media | ISO, checksum, signature, and certificate are published for the candidate | In progress — downstream ISO pipeline verification |
+| Install validation | Plain and LUKS install E2E checks pass against the candidate | In progress — E2E install test suite execution |
 | Stable promotion | `stable` resolves to the candidate digest and the promotion workflow verifies the image and ISO objects | Blocked on build and install gates |
-| Discoverable release | A GitHub Release records the digest, signed artifact URLs, known limitations, and upgrade path | Not started — no releases or tags |
-| User-path validation | The public install guide is followed successfully against the promoted candidate | Not started |
+| Discoverable release | A GitHub Release records the digest, signed artifact URLs, known limitations, and upgrade path | Planned for Q4 2026 Beta tag |
+| User-path validation | The public install guide is followed successfully against the promoted candidate | Planned following release candidate |
 
 The first five rows are release blockers. User-path validation may be completed
 with a release candidate, but must be recorded before Beta is announced.
