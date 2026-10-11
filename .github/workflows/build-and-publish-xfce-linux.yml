@@ -22,6 +22,10 @@ concurrency:
   group: casd-xfce-linux-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build:
     # Always a GitHub-hosted runner -- no third-party runner escape hatch.

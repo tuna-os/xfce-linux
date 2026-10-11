@@ -15,6 +15,10 @@ env:
   IMAGE_NAME: xfce-linux
   BST2_IMAGE: registry.gitlab.com/freedesktop-sdk/infrastructure/freedesktop-sdk-docker-images/bst2:64eb0b4930d57a92710822898fb73af6cc1ae35d
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build-changed:
     name: Build changed elements
