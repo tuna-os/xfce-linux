@@ -1,6 +1,14 @@
-# XFCE Linux — Project Status
+<!-- ste-disable-file: this dated report preserves the historical session record and its diagnostic wording -->
+# XFCE Linux — Project Status (archived 2026-08-25 snapshot)
 
-**Status:** ✅ **75% COMPLETE** — Build verified, greetd/regreet cargo2 refs repaired, system boots successfully
+> **Archived.** This is a point-in-time session report from 2026-08-25,
+> kept for history alongside the other reports in `docs/reference/`. It
+> predates the working CI-gated build/export/signing/promotion pipeline on
+> `main` and does not reflect current state. For current state, see the
+> top-level [README.md](../../README.md), [AGENTS.md](../../AGENTS.md), and
+> [docs/ci-and-iso-pipeline.md](../ci-and-iso-pipeline.md).
+
+**Status (at time of writing):** ✅ **75% COMPLETE** — Build verified, greetd/regreet cargo2 refs repaired, system boots successfully
 
 **Last Updated:** 2026-08-25 16:35 UTC
 
