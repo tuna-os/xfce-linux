@@ -615,6 +615,20 @@ def test_do_get_log_rejects_path_outside_buildstream_logs(dashboard, monkeypatch
     handler.send_response.assert_called_once_with(404)
 
 
+def test_do_get_log_accepts_path_inside_buildstream_logs(dashboard, monkeypatch, tmp_path):
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    monkeypatch.setattr(dashboard.os.path, "expanduser", lambda p: str(logs_dir))
+    inside = logs_dir / "inside.log"
+    inside.write_text("build log line 1\nbuild log line 2\n")
+    handler = _make_handler(dashboard, f"/api/log?path={inside}")
+
+    handler.do_GET()
+
+    handler.send_response.assert_called_once_with(200)
+    assert b"build log line 1" in handler.wfile.getvalue()
+
+
 def test_do_get_unknown_path_serves_html(dashboard):
     handler = _make_handler(dashboard, "/")
 
