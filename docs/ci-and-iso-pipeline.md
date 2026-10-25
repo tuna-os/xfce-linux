@@ -98,6 +98,7 @@ prompt, and installed desktop.
 
 | Date | Symptom | Root cause | Fix |
 |---|---|---|---|
+| 2026-10-25 | Public latest ISO could fail boot verification; failed uploads still reported success (#156) | R2 publication preceded the boot gate and used `continue-on-error` | Publish only after boot verification; upload dated objects, then stable checksum/signature/certificate, and latest ISO last. Upload errors fail the job. Separate R2 object writes are not atomic: interrupted promotion can temporarily mismatch metadata, so consumers must verify downloads. Invariant: `test_r2_publication_requires_boot_and_promotes_image_last` |
 | 2026-07-19 | Every `just` call in CI fails: "multiple candidate justfiles" | `justfile` + `Justfile` both at root; just ≥1.30 hard-errors | ISO recipes moved to `iso.justfile`, imported from `Justfile` |
 | 2026-07-19 | All 10 chunk jobs building for 5+ h | `project.conf` `name:` (tromso example) renaming project changes every cache key → world rebuild | expected one-time cost; caches repopulate |
 | 2026-07-19 | Installer flatpak never launched in live session | install-flatpaks.sh baked `org.bootcinstaller.Installer` while configure-live.sh wired `org.xfceinstaller.Installer` | both sides now use `org.tunaos.InstallerXfce` |
