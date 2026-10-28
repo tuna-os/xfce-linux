@@ -126,3 +126,14 @@ def test_scheduled_multirunner_preserves_in_progress_builds():
     assert re.search(
         r"^\s*cancel-in-progress:\s*false\s*(?:#.*)?$", workflow, re.MULTILINE
     )
+
+
+def test_ste_workflow_is_pinned_to_full_commit_sha():
+    """The shared reusable STE workflow must use an immutable commit SHA."""
+    workflow = (REPO / ".github" / "workflows" / "ste.yml").read_text()
+    refs = re.findall(
+        r"uses:\s+tuna-os/\.github/\.github/workflows/ste-lint\.yml@(\S+)",
+        workflow,
+    )
+    assert refs, "ste-lint reusable workflow reference missing"
+    assert all(re.fullmatch(r"[0-9a-f]{40}", ref.split("#")[0].strip()) for ref in refs), refs
