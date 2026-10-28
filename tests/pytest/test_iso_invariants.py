@@ -126,3 +126,16 @@ def test_scheduled_multirunner_preserves_in_progress_builds():
     assert re.search(
         r"^\s*cancel-in-progress:\s*false\s*(?:#.*)?$", workflow, re.MULTILINE
     )
+
+
+def test_qemu_serial_readers_use_qemu_privileges():
+    """Root QEMU can create 0600 logs; unprivileged grep silently times out."""
+    recipes = (REPO / "iso.justfile").read_text()
+    readers = [
+        line.strip() for line in recipes.splitlines()
+        if re.search(r"\b(?:grep|tail)\b", line)
+        and re.search(r"\{\{(?:luks|plain)-qemu-serial-", line)
+    ]
+    assert len(readers) >= 6
+    for line in readers:
+        assert re.search(r"sudo (?:grep|tail)\b", line), line
