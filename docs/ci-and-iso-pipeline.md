@@ -99,6 +99,7 @@ prompt, and installed desktop.
 | Date | Symptom | Root cause | Fix |
 |---|---|---|---|
 | 2026-10-25 | Failed Multi-Runner runs immediately launch failing Live ISO builds (#131) | `workflow_run: completed` includes failed and cancelled builds | Require a successful upstream conclusion at the ISO job boundary; push and manual triggers remain available. This suppresses failure cascades; it does not verify image publication or gate independent install E2E runs. |
+| 2026-10-25 | Root Ruff and Codecov configs declared checks that never ran | Unit Tests only compiled Python and ran pytest without coverage | Run Ruff with the existing config, fix initial findings, enforce 45% locally, and upload XML to Codecov; `test_python_lint_and_coverage_are_active` guards the wiring |
 | 2026-07-19 | Every `just` call in CI fails: "multiple candidate justfiles" | `justfile` + `Justfile` both at root; just ≥1.30 hard-errors | ISO recipes moved to `iso.justfile`, imported from `Justfile` |
 | 2026-07-19 | All 10 chunk jobs building for 5+ h | `project.conf` `name:` (tromso example) renaming project changes every cache key → world rebuild | expected one-time cost; caches repopulate |
 | 2026-07-19 | Installer flatpak never launched in live session | install-flatpaks.sh baked `org.bootcinstaller.Installer` while configure-live.sh wired `org.xfceinstaller.Installer` | both sides now use `org.tunaos.InstallerXfce` |
@@ -179,6 +180,14 @@ skipped job reports success, so each required check always reports. If the
 | Unit Tests | a file that is not `*.md` or `LICENSE*` |
 | Just Parse | `Justfile`, `iso.justfile`, `just/` |
 
+Unit Tests runs `ruff check --config ruff.toml` across the repository and
+measures `scripts/` and `tools/` with pytest-cov. Coverage below 45% fails
+this existing required job even if Codecov is unavailable. The job uploads the
+XML report to Codecov for the project status (45% target, 2% tolerance) and
+informational patch status (70% target) declared in `codecov.yml`. Upload
+errors are non-fatal; Codecov service availability does not disable the local
+gate. The file-existence signal in #139 alone does not establish enforcement.
+
 The plain and LUKS install tests build the same ISO and use different install
 paths. A change to their shared inputs (`xfce-linux/`, the justfiles,
 `scripts/lib-install-qemu.sh`, `scripts/fisherman-install.sh`) runs one of
@@ -198,3 +207,14 @@ The workflow force-pushes the stable branch to the same commit so the branch and
 tag cannot differ. It shares the concurrency group of the promotion workflow,
 so both cannot run at once. Dakota-pattern note: add a cosign verification step
 before the retag after cosign support lands.
+
+### Serial log permissions in install E2E (#135)
+
+| Symptom | Cause | Fix / invariant |
+| --- | --- | --- |
+| Plain installed boot times out, then `tail` reports `Permission denied` (run 39399656661) | QEMU runs under sudo and can create root-owned 0600 serial logs; unprivileged grep hides the read error and never sees readiness or emergency markers | Read live and plain-installed serial logs with sudo, matching QEMU and the LUKS unlock helper; `test_qemu_serial_readers_use_qemu_privileges` guards both readiness and diagnostic reads. |
+
+The earlier missing `:latest` publication failure is distinct: merged #147
+unblocked the build and #241 restored scheduled publication. The October 20
+Plain run successfully built its ISO and booted QEMU before this log-access
+failure. This fix does not resolve all guest boot failures.

@@ -5,7 +5,6 @@ docs/ci-and-iso-pipeline.md troubleshooting table). Cheap to run, no
 containers needed — pure source inspection.
 """
 
-import os
 import re
 from pathlib import Path
 
@@ -146,3 +145,45 @@ def test_chained_iso_requires_successful_image_build():
         "github.event_name != 'workflow_run' || "
         "github.event.workflow_run.conclusion == 'success'"
     )
+
+
+def test_qemu_serial_readers_use_qemu_privileges():
+    """Root QEMU can create 0600 logs; unprivileged grep silently times out."""
+    recipes = (REPO / "iso.justfile").read_text()
+    readers = [
+        line.strip() for line in recipes.splitlines()
+        if re.search(r"\b(?:grep|tail)\b", line)
+        and re.search(r"\{\{(?:luks|plain)-qemu-serial-", line)
+    ]
+    assert len(readers) >= 6
+    for line in readers:
+        assert re.search(r"sudo (?:grep|tail)\b", line), line
+
+
+def test_python_lint_and_coverage_are_active():
+    """Root lint/coverage configs must have consumers in the required test job."""
+    import yaml
+
+    workflow = yaml.safe_load((REPO / ".github/workflows/test.yml").read_text())
+    steps = workflow["jobs"]["unit-tests"]["steps"]
+    lint = next(step for step in steps if step.get("uses", "").startswith("astral-sh/ruff-action@"))
+    assert lint["with"]["args"] == "check --config ruff.toml"
+    command = next(step["run"] for step in steps if step.get("name") == "Run pytest tests")
+    config = yaml.safe_load((REPO / "codecov.yml").read_text())
+    target = config["coverage"]["status"]["project"]["default"]["target"].rstrip("%")
+    assert f"--cov-fail-under={target}" in command
+    assert "--cov=scripts" in command and "--cov=tools" in command
+    assert "--cov-report=xml" in command
+    upload = next(step for step in steps if step.get("uses", "").startswith("codecov/codecov-action@"))
+    assert upload["with"]["files"] == "./coverage.xml"
+
+
+def test_ste_workflow_is_pinned_to_full_commit_sha():
+    """The shared reusable STE workflow must use an immutable commit SHA."""
+    workflow = (REPO / ".github" / "workflows" / "ste.yml").read_text()
+    refs = re.findall(
+        r"uses:\s+tuna-os/\.github/\.github/workflows/ste-lint\.yml@(\S+)",
+        workflow,
+    )
+    assert refs, "ste-lint reusable workflow reference missing"
+    assert all(re.fullmatch(r"[0-9a-f]{40}", ref.split("#")[0].strip()) for ref in refs), refs
