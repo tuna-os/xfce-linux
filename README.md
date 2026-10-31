@@ -75,6 +75,7 @@ cosign verify-blob xfce-linux-live-<date>-<sha>.iso \
 ## Docs
 
 - [XFCE Linux on tunaos.org](https://tunaos.org/docs/xfce-linux)
+- [Experimental local Mkosi DDI](docs/mkosi-ddi.md)
 - [Contribution guide](CONTRIBUTING.md)
 
 ## License
