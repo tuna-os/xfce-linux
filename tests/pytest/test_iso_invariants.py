@@ -5,7 +5,6 @@ docs/ci-and-iso-pipeline.md troubleshooting table). Cheap to run, no
 containers needed — pure source inspection.
 """
 
-import os
 import re
 from pathlib import Path
 
@@ -146,3 +145,83 @@ def test_chained_iso_requires_successful_image_build():
         "github.event_name != 'workflow_run' || "
         "github.event.workflow_run.conclusion == 'success'"
     )
+
+
+def test_qemu_serial_readers_use_qemu_privileges():
+    """Root QEMU can create 0600 logs; unprivileged grep silently times out."""
+    recipes = (REPO / "iso.justfile").read_text()
+    readers = [
+        line.strip() for line in recipes.splitlines()
+        if re.search(r"\b(?:grep|tail)\b", line)
+        and re.search(r"\{\{(?:luks|plain)-qemu-serial-", line)
+    ]
+    assert len(readers) >= 6
+    for line in readers:
+        assert re.search(r"sudo (?:grep|tail)\b", line), line
+
+
+def test_python_lint_and_coverage_are_active():
+    """Root lint/coverage configs must have consumers in the required test job."""
+    import yaml
+
+    workflow = yaml.safe_load((REPO / ".github/workflows/test.yml").read_text())
+    steps = workflow["jobs"]["unit-tests"]["steps"]
+    lint = next(step for step in steps if step.get("uses", "").startswith("astral-sh/ruff-action@"))
+    assert lint["with"]["args"] == "check --config ruff.toml"
+    command = next(step["run"] for step in steps if step.get("name") == "Run pytest tests")
+    config = yaml.safe_load((REPO / "codecov.yml").read_text())
+    target = config["coverage"]["status"]["project"]["default"]["target"].rstrip("%")
+    assert f"--cov-fail-under={target}" in command
+    assert "--cov=scripts" in command and "--cov=tools" in command
+    assert "--cov-report=xml" in command
+    upload = next(step for step in steps if step.get("uses", "").startswith("codecov/codecov-action@"))
+    assert upload["with"]["files"] == "./coverage.xml"
+
+
+def test_ste_workflow_is_pinned_to_full_commit_sha():
+    """The shared reusable STE workflow must use an immutable commit SHA."""
+    workflow = (REPO / ".github" / "workflows" / "ste.yml").read_text()
+    refs = re.findall(
+        r"uses:\s+tuna-os/\.github/\.github/workflows/ste-lint\.yml@(\S+)",
+        workflow,
+    )
+    assert refs, "ste-lint reusable workflow reference missing"
+    assert all(re.fullmatch(r"[0-9a-f]{40}", ref.split("#")[0].strip()) for ref in refs), refs
+
+
+def test_reusable_build_workflow_is_immutable():
+    """The shared build receives packages: write; branch refs allow code drift."""
+    workflow = (REPO / ".github/workflows/build-multirunner.yml").read_text()
+    refs = re.findall(
+        r"uses:\s+tuna-os/bst-ci/\.github/workflows/multirunner-build\.yml@(\S+)",
+        workflow,
+    )
+    assert refs, "shared build workflow reference missing"
+    assert all(re.fullmatch(r"[0-9a-f]{40}", ref) for ref in refs), refs
+    script_ref = re.search(r"^\s+bst_ci_ref:\s+([0-9a-f]{40})\s*$", workflow, re.MULTILINE)
+    assert script_ref, "shared planning script must also be pinned"
+    assert all(ref == script_ref.group(1) for ref in refs), "update both bst-ci pins together"
+
+
+def test_r2_publication_requires_boot_and_promotes_image_last():
+    """A failed boot must never replace public objects; upload failures are fatal."""
+    import yaml
+
+    workflow = yaml.safe_load((REPO / '.github/workflows/build-iso.yml').read_text())
+    steps = next(job['steps'] for job in workflow['jobs'].values() if 'steps' in job)
+    boot = next(i for i, step in enumerate(steps) if step.get('name') == 'Boot verification (UEFI + serial)')
+    assert not steps[boot].get('continue-on-error', False)
+    uploads = [(i, step) for i, step in enumerate(steps) if 'rclone copyto' in step.get('run', '')]
+    assert uploads
+    for index, step in uploads:
+        assert index > boot
+        assert not step.get('continue-on-error', False)
+        assert step['if'] == "${{ inputs.skip_upload != true && github.event_name != 'pull_request' }}"
+        run = step['run']
+        writes = re.findall(r'rclone copyto.*?(?=\n\s*(?:rclone|#)|\Z)', run, re.S)
+        assert len(writes) == 8  # dated and latest ISO, checksum, signature, certificate
+        assert '/${DATED}.cert"' in writes[3]
+        assert 'xfce-linux-live-latest.iso-CHECKSUM"' in writes[4]
+        assert 'xfce-linux-live-latest.iso.sig"' in writes[5]
+        assert 'xfce-linux-live-latest.iso.cert"' in writes[6]
+        assert writes[-1].rstrip().endswith('/xfce-linux-live-latest.iso"')
