@@ -2,6 +2,7 @@ PRETTY_NAME="XFCE Linux"
 NAME="XFCE Linux"
 VERSION="0.1.0"
 VERSION_ID="0"
+VERSION_CODENAME=brussels
 IMAGE_VERSION="0"
 ID=xfce-linux
 ID_LIKE=fedora
