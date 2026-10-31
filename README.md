@@ -6,8 +6,8 @@
 and immutable OS image with the XFCE desktop.
 
 Part of the [TunaOS](https://tunaos.org) ecosystem.
-The current codename is **Brussels**, recognizing Xfce's upstream history: the
-Xfce Foundation e.V. launched at FOSDEM in Brussels in 2011
+The current codename is **Brussels**. The Xfce Foundation e.V. started at
+FOSDEM in Brussels in 2011
 ([upstream announcement](https://blog.xfce.org/2011/02/xfce-foundation-e-v-launched-at-fosdem/)).
 
 <!-- hive-contribute-plea: donated-compute appeal, keep in sync across repos -->
