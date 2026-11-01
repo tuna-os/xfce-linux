@@ -322,7 +322,11 @@ jobs:
       - name: Validate full element graph
         run: |
           bst --no-interactive show --deps all --format "%{name} %{state}" oci/xfce-linux.bst > /tmp/graph.txt
-          wc -l /tmp/graph.txt
+          # Validate Mkosi's root-tree target.
+          bst --no-interactive show --deps all \
+            --format "%{name} %{state}" \
+            mkosi/xfce-linux-ddi.bst > /tmp/mkosi-ddi-graph.txt
+          wc -l /tmp/graph.txt /tmp/mkosi-ddi-graph.txt
 
   just-parse:
     name: Just Parse

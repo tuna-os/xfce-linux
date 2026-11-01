@@ -6,6 +6,18 @@
 and immutable OS image with the XFCE desktop.
 
 Part of the [TunaOS](https://tunaos.org) ecosystem.
+The current codename is **Brussels**. The Xfce Foundation e.V. started at
+FOSDEM in Brussels in 2011
+([upstream announcement](https://blog.xfce.org/2011/02/xfce-foundation-e-v-launched-at-fosdem/)).
+
+![XFCE Linux wordmark](branding/brussels/xfce-linux-wordmark.svg)
+
+Brussels is the product codename. Its icon and wallpaper are original TunaOS
+artwork, not official Xfce Foundation branding.
+
+![Brussels desktop wallpaper preview](branding/brussels/brussels-wallpaper.png)
+
+Icon: [Brussels product mark](branding/brussels/brussels-logo.svg).
 
 <!-- hive-contribute-plea: donated-compute appeal, keep in sync across repos -->
 ## Contribute compute — no code needed
@@ -72,6 +84,7 @@ cosign verify-blob xfce-linux-live-<date>-<sha>.iso \
 ## Docs
 
 - [XFCE Linux on tunaos.org](https://tunaos.org/docs/xfce-linux)
+- [Experimental local Mkosi DDI](docs/mkosi-ddi.md)
 - [Contribution guide](CONTRIBUTING.md)
 
 ## License

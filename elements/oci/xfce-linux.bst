@@ -15,6 +15,9 @@ build-depends:
   - filename: oci/layers/xfce-linux.bst
     config:
       location: /layer
+  - filename: oci/os-release.bst
+    config:
+      location: /identity
 
 environment:
   LD_PRELOAD: /usr/libexec/fakecap/fakecap.so
@@ -25,6 +28,9 @@ variables:
 
 config:
   commands:
+    - |
+      # Use the repository's stable product identity and codename.
+      install -Dm644 /identity/usr/lib/os-release /layer/usr/lib/os-release
     - mkdir /fakecap
     - |
       prepare-image.sh \
